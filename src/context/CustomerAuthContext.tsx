@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { customerSupabase, setRememberMe } from '../lib/customerAuth'
-import { supabase } from '../lib/supabase'
 import { notifySignup } from '../lib/webhooks'
 
 export interface CustomerUser {
@@ -112,17 +111,6 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
 
     // Fire welcome email — fire-and-forget
     notifySignup(name, email).catch(() => {})
-
-    // Stub a customers row so the admin Customers page can see new signups
-    // even before they place an order. The checkout upserts on email later
-    // and fills in the address details.
-    supabase
-      .from('customers')
-      .upsert(
-        { name: name.trim(), email: email.toLowerCase().trim() },
-        { onConflict: 'email' },
-      )
-      .then(() => {}, () => {})
 
     // No session yet → Supabase is waiting for email confirmation.
     const needsConfirmation = !!data.user && !data.session

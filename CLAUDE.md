@@ -77,18 +77,19 @@ A single React SPA with three audiences:
 2. **Pre-auth client gate** — `src/pages/admin/Login.tsx` rejects non-allow-listed emails BEFORE calling Supabase auth (saves round-trip + log noise).
 3. **Post-auth client re-check** — same file re-verifies after auth in case the server returned a different email.
 4. **Route protection** — `src/components/admin/ProtectedRoute.tsx` blocks `/admin/*` unless `useAuth().user.email` matches the allow-list.
-5. **Server-side RLS** — Supabase RLS on `products`, `orders`, `order_items`, `cw_contact_messages` checks `profiles.app_role IN ('owner','staff')`. The current admin (`info@cw-electronics.co.za`, id `bf71de7c-2ad7-4b4d-b1eb-88252710d906`) has `app_role = 'owner'`.
+5. **Server-side RLS** — admin write/read access is gated by the SQL helper `public.is_cw_admin()` (`lower(auth.jwt()->>'email') = 'info@cw-electronics.co.za'`). It governs the `*_admin_all` policies on `orders`, `customers`, `order_items`, `order_status_events`. `cw_contact_messages` still uses its own admin policy. (The old `profiles.app_role` model is NOT what's enforced — `is_cw_admin()` is.)
 
 **If a new admin is added, ALL five layers must be updated.**
 
 ### 4.3 Customer sign-ups stay OPEN
 Any visitor can register at `/account/register` to track orders + use the wishlist. This is intentional — do NOT disable Supabase auth signups, that would break customer registration. The defense against customer accounts accessing admin data is RLS, not signup gating.
 
-### 4.4 PayFast is bypassed for now
-- `src/pages/store/Checkout.tsx#handleSubmit` writes the order directly to Supabase with `status: 'paid'`, `payment_method: 'eft'`, `payment_status: 'paid'`. **No redirect to PayFast.**
-- This is so receipts + emails + admin workflows can be tested end-to-end while waiting on PayFast merchant verification.
-- **Switch back**: replace the body of `handleSubmit` with `redirectToPayFast(...)` from `src/lib/payfast.ts`. The PayFast wiring code is still in the repo.
-- Test orders use real `CW-{year}-{seq}` order numbers (e.g. `CW-2026-4821`).
+### 4.4 PayFast is bypassed — manual EFT flow via `place_order` RPC
+- `src/pages/store/Checkout.tsx#handleSubmit` calls the `public.place_order(payload jsonb)` Postgres RPC. It does NOT write tables directly and does NOT redirect to PayFast.
+- `place_order` is **SECURITY DEFINER**: upserts the customer by email, creates the order + items + first `pending` status event atomically, and returns `{ order_id, order_number, customer_id }`. Orders start `status='pending'`, `payment_status='unpaid'`, `payment_method='eft'`, `payment_reference = order_number`. The unique `CW-YYYY-NNNN` number is generated server-side.
+- **Why an RPC**: table RLS has no anon SELECT, so the old `insert().select()` returned nothing for guests and every guest checkout silently "failed" (0 `CW-` orders ever reached the DB). The definer RPC is the single trusted write path for both guests and logged-in customers.
+- Admin confirms the EFT in `/admin/orders/:id` ("Mark as Paid" → `markOrderPaid`), flipping `payment_status='paid'` + `status='processing'` and firing the receipt email.
+- **Switch back to PayFast**: re-introduce `redirectToPayFast(...)` from `src/lib/payfast.ts` in `handleSubmit` (or branch on `paymentMethod`); `place_order` can remain the order-creation primitive.
 
 ### 4.5 Bilingual admin (EN / 中文)
 - **Admin only.** Storefront is English-only (Chinese product names exist in DB as a fallback but the storefront `useLang` defaults to English).
@@ -149,12 +150,14 @@ The Supabase project is multi-tenant — used by several apps. Tables relevant t
 | `cw_contact_messages` | Contact form inbox | `name`, `email`, `phone`, `inquiry_type`, `message`, `read`, `replied_at`, `created_at` |
 | `wishlist` | Per-user saved products | `user_id`, `product_id` |
 
-**RLS-relevant rules**:
-- `cw_contact_messages` — anon INSERT (public contact form), admin SELECT/UPDATE/DELETE only (via `profiles.app_role IN ('owner','staff')`).
-- `products`, `orders`, `order_items` — public read, admin write (via same `profiles.app_role` check).
-- Customer-owned tables (`wishlist`, `addresses`, `user_addresses`) use `auth.uid() = user_id`.
+**RLS-relevant rules** (current, enforced):
+- `products` — public read (`products_public_read`), admin write (`is_cw_admin()`).
+- `orders`, `customers`, `order_items`, `order_status_events` — **no anon access**. Admin (`is_cw_admin()`) has full ALL. Authenticated customers can SELECT **only their own** rows, scoped by `lower(email) = lower(auth.jwt()->>'email')` (orders/items/events join through `customers`). There is no anon INSERT — all order creation goes through the SECURITY DEFINER `place_order()` RPC (granted to `anon` + `authenticated`).
+- `cw_contact_messages` — anon INSERT (public contact form), admin SELECT/UPDATE/DELETE only.
+- `wishlist` — own-row only: `auth.uid() = user_id` (`wishlist_own_all`).
+- Helpers: `public.is_cw_admin()` (admin email check), `public.place_order(jsonb)` (atomic order creation). Both SECURITY DEFINER.
 
-**⚠️ Loose policies elsewhere**: the broader Supabase project has some shared-app policies like `orders_read_all` and `Products can be managed by authenticated users` that grant overly broad access. These predate CW Electronics and may be load-bearing for other apps on this project. Don't touch them without confirming first.
+**⚠️ Loose policies elsewhere**: other shared-app policies may exist on this multi-tenant project and predate CW Electronics. Don't touch policies outside the CW tables above without confirming impact first.
 
 ---
 
@@ -406,7 +409,10 @@ npm run preview      # Preview the built site
 - The local repo doesn't have a `supabase/migrations/` folder — migrations live in the remote project. Document migrations in this CLAUDE.md when applied.
 
 **Recent migrations applied via MCP** (latest first):
-- `2026-05-12 cw_lock_admin_and_messages` — set `profiles.app_role='owner'` for admin; restricted `cw_contact_messages` SELECT/UPDATE/DELETE to admin only.
+- `2026-05-18 cw_wishlist_table` — created `wishlist` (user_id→auth.users, product_id→products, unique) with own-row RLS.
+- `2026-05-18 cw_tighten_rls_popia` — replaced `auth.role()='authenticated'` admin_all policies with `is_cw_admin()` + own-row SELECT on orders/customers/order_items; enabled RLS on `order_status_events`; dropped now-unused `*_anon_insert` policies (checkout uses the RPC).
+- `2026-05-18 cw_place_order_rpc` — added SECURITY DEFINER `place_order(jsonb)` (atomic guest/customer checkout) and `is_cw_admin()` helper.
+- `2026-05-12 cw_lock_admin_and_messages` — restricted `cw_contact_messages` SELECT/UPDATE/DELETE to admin only.
 
 ---
 

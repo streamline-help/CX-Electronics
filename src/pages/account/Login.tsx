@@ -2,6 +2,19 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Zap, Loader2, Check, AlertTriangle, MailCheck } from 'lucide-react'
 import { useCustomerAuth } from '../../context/CustomerAuthContext'
+import { customerSupabase } from '../../lib/customerAuth'
+
+// Does the URL carry a Supabase confirmation/recovery payload we must consume
+// ourselves? The customer client runs with detectSessionInUrl:false (so it
+// never fights the admin client over the URL), which means a freshly-confirmed
+// signup link landing here would otherwise be ignored and the user stuck on
+// the login form. We detect tokens and establish the session manually.
+function hasAuthPayload(): boolean {
+  const h = window.location.hash
+  const s = window.location.search
+  if (/[#&]error=/.test(h)) return false
+  return /access_token=/.test(h) || /[?&]code=/.test(s)
+}
 
 // Parse Supabase auth errors that arrive in the URL hash, e.g.
 // #error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired
@@ -28,16 +41,64 @@ export function AccountLogin() {
   const [resendState, setResendState] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
   const [resendMessage, setResendMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [confirming, setConfirming] = useState(hasAuthPayload)
 
-  // Detect Supabase confirmation errors in the URL hash and clear the hash afterwards.
+  // 1) Surface Supabase confirmation errors (e.g. otp_expired) from the hash.
+  // 2) If the URL carries a valid confirmation/recovery payload, establish the
+  //    session ourselves and drop the user straight into their account.
   useEffect(() => {
     const parsed = parseHashError(window.location.hash)
     if (parsed.message) {
       setLinkError({ code: parsed.code, message: parsed.message })
-      const url = window.location.pathname + window.location.search
-      window.history.replaceState(null, '', url)
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+      return
     }
-  }, [])
+
+    if (!hasAuthPayload()) return
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
+        const code = new URLSearchParams(window.location.search).get('code')
+
+        let failed = false
+        if (accessToken && refreshToken) {
+          const { error } = await customerSupabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          failed = !!error
+        } else if (code) {
+          const { error } = await customerSupabase.auth.exchangeCodeForSession(code)
+          failed = !!error
+        }
+
+        if (cancelled) return
+        // Clean the token out of the address bar either way.
+        window.history.replaceState(null, '', window.location.pathname)
+
+        if (failed) {
+          setLinkError({
+            code: 'otp_expired',
+            message: 'Your email link has expired or was already used.',
+          })
+          setConfirming(false)
+        } else {
+          navigate(from, { replace: true })
+        }
+      } catch {
+        if (!cancelled) {
+          setLinkError({ code: null, message: 'Could not confirm this link. Please sign in.' })
+          setConfirming(false)
+        }
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [navigate, from])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -67,6 +128,15 @@ export function AccountLogin() {
   }
 
   const isExpiredLink = linkError?.code === 'otp_expired' || /expired|invalid/i.test(linkError?.message ?? '')
+
+  if (confirming) {
+    return (
+      <div className="min-h-screen bg-[#0f1117] flex flex-col items-center justify-center px-4 gap-4">
+        <Loader2 className="w-8 h-8 text-[#E63939] animate-spin" />
+        <p className="text-white/50 text-sm">Confirming your account…</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#0f1117] flex items-center justify-center px-4 py-8">

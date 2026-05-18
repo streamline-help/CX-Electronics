@@ -87,12 +87,6 @@ const EMPTY_FORM: FormData = {
   address_line2: '', city: '', province: 'Gauteng', postal_code: '',
 }
 
-function generateOrderNumber(): string {
-  const year = new Date().getFullYear()
-  const seq = Math.floor(Math.random() * 9000) + 1000
-  return `CW-${year}-${seq}`
-}
-
 function saveOrderLocally(order: OrderWithDetails) {
   try {
     const stored: Record<string, OrderWithDetails> = JSON.parse(
@@ -226,7 +220,6 @@ export function Checkout() {
     setSubmitting(true)
     setSubmitError(null)
 
-    const orderNumber = generateOrderNumber()
     const fulfillmentType = isCollection ? 'collection' : 'delivery'
     const shippingAddr: ShippingAddress | null = isCollection ? null : {
       name: form.name,
@@ -240,92 +233,58 @@ export function Checkout() {
 
     const orderType = items.some((i) => i.orderType === 'bulk') ? 'bulk' : 'retail'
     const now = new Date().toISOString()
-    // The order number IS the EFT reference — easiest for the customer to type
-    // accurately and easiest for us to match against the bank statement.
-    const paymentReference = orderNumber
 
-    // When the customer is logged in, run the writes through their
-    // authenticated client. RLS on customers/orders/order_items requires
-    // auth.role() = 'authenticated', so the anon client cannot return the
-    // upserted customer id (leaving the order unlinked) nor RETURNING rows.
+    // Single trusted entry point. place_order() is SECURITY DEFINER so it works
+    // identically for guests (anon) and logged-in customers — it upserts the
+    // customer by email, creates the order + items + first status event
+    // atomically, and returns the server-generated CW order number. This is
+    // why guest checkout no longer needs table-level RETURNING (which RLS
+    // blocks for anon).
     const db = user ? customerSupabase : supabase
 
     try {
-      const { data: customer } = await db
-        .from('customers')
-        .upsert(
-          {
-            name: form.name, email: form.email, phone: form.phone,
-            address_line1: isCollection ? null : form.address_line1,
-            address_line2: isCollection ? null : (form.address_line2 || null),
-            city: isCollection ? null : form.city,
-            province: isCollection ? null : form.province,
-            postal_code: isCollection ? null : form.postal_code,
-          },
-          { onConflict: 'email' },
-        )
-        .select('id')
-        .single()
-
-      const { data: order, error: orderErr } = await db
-        .from('orders')
-        .insert({
-          order_number: orderNumber,
-          customer_id: customer?.id ?? null,
+      const { data: rpcData, error: rpcErr } = await db.rpc('place_order', {
+        payload: {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          is_collection: isCollection,
+          address_line1: form.address_line1,
+          address_line2: form.address_line2 || null,
+          city: form.city,
+          province: form.province,
+          postal_code: form.postal_code,
           order_type: orderType,
-          status: 'pending',
-          fulfillment_type: fulfillmentType,
-          collection_name: isCollection ? form.name : null,
-          collection_phone: isCollection ? form.phone : null,
           subtotal,
           shipping_fee: shippingFee,
           total,
-          shipping_address: shippingAddr,
           payment_method: paymentMethod,
-          payment_status: 'unpaid',
-          payment_reference: paymentReference,
           notes: `Delivery: ${selectedDelivery.label}`,
-          created_at: now,
-          updated_at: now,
-        })
-        .select('id, order_number')
-        .single()
+          shipping_address: shippingAddr,
+          items: items.map((item) => ({
+            product_id: item.productId,
+            product_name: item.name,
+            quantity: item.quantity,
+            unit_price: item.price,
+            line_total: item.price * item.quantity,
+          })),
+        },
+      })
 
-      if (orderErr || !order) {
-        setSubmitError(orderErr?.message ?? 'Could not place your order. Please try again.')
+      const result = rpcData as
+        | { order_id: string; order_number: string; customer_id: string | null }
+        | null
+
+      if (rpcErr || !result?.order_id) {
+        setSubmitError(rpcErr?.message ?? 'Could not place your order. Please try again.')
         setSubmitting(false)
         return
       }
-
-      const { error: itemsErr } = await db.from('order_items').insert(
-        items.map((item) => ({
-          order_id: order.id,
-          product_id: item.productId,
-          product_name: item.name,
-          quantity: item.quantity,
-          unit_price: item.price,
-          line_total: item.price * item.quantity,
-          thumbnail_url: item.image || null,
-          created_at: now,
-        })),
-      )
-
-      if (itemsErr) {
-        // Roll back the order header so the customer can retry cleanly.
-        await db.from('orders').delete().eq('id', order.id)
-        setSubmitError('Could not save your order items. Please try again.')
-        setSubmitting(false)
-        return
-      }
-
-      await db.from('order_status_events').insert([
-        { order_id: order.id, status: 'pending', triggered_by: 'system', created_at: now },
-      ])
 
       const fullOrder: OrderWithDetails = {
-        id: order.id,
-        order_number: order.order_number,
-        customer_id: customer?.id ?? null,
+        id: result.order_id,
+        order_number: result.order_number,
+        customer_id: result.customer_id ?? null,
         order_type: orderType,
         status: 'pending',
         fulfillment_type: fulfillmentType,
@@ -333,7 +292,7 @@ export function Checkout() {
         collection_phone: isCollection ? form.phone : null,
         payment_status: 'unpaid',
         payment_method: paymentMethod as OrderWithDetails['payment_method'],
-        payment_reference: paymentReference,
+        payment_reference: result.order_number,
         notes: `Delivery: ${selectedDelivery.label}`,
         subtotal,
         shipping_fee: shippingFee,
@@ -341,7 +300,7 @@ export function Checkout() {
         shipping_address: shippingAddr,
         created_at: now,
         updated_at: now,
-        customers: { id: customer?.id ?? '', name: form.name, email: form.email, phone: form.phone },
+        customers: { id: result.customer_id ?? '', name: form.name, email: form.email, phone: form.phone },
         order_items: items.map((item, i) => ({
           id: String(i),
           product_name: item.name,
@@ -355,7 +314,7 @@ export function Checkout() {
       saveOrderLocally(fullOrder)
       notifyNewOrder(fullOrder)
       clearCart()
-      navigate(`/order/${order.id}`)
+      navigate(`/order/${result.order_id}`, { state: { order: fullOrder } })
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Network error. Please try again.')
       setSubmitting(false)
