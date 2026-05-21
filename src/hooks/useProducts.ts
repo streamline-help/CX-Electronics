@@ -114,16 +114,7 @@ export function useProducts(opts: UseProductsOptions = {}): UseProductsResult {
           : p.product_variant_groups ?? null,
       })) as ProductWithCategory[]
 
-      // Deduplicate: show only the first product per variant group
-      const seenGroups = new Set<string>()
-      const deduped = resolved.filter((p) => {
-        if (!p.variant_group_id) return true
-        if (seenGroups.has(p.variant_group_id)) return false
-        seenGroups.add(p.variant_group_id)
-        return true
-      })
-
-      setProducts(deduped)
+      setProducts(resolved)
       setTotalCount(count ?? 0)
       setError(null)
       setLoading(false)
