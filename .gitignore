@@ -29,3 +29,22 @@ Thumbs.db
 # Python
 __pycache__/
 *.pyc
+
+# ── Local data-migration working files (NOT app source) ──────────────
+# Throwaway artifacts from catalog / price / image / spec maintenance:
+# DB snapshots/backups, generated SQL, and CSV/JSON/HTML worklists.
+*.csv
+*.sql
+*_backup_*.json
+_catcodes.json
+apply_all.json
+apply_set.json
+code_backfill.json
+held_apply.json
+serper_images.json
+serper_review.html
+scripts/spec_in/
+scripts/spec_out/
+
+# One-off DB maintenance scripts (run locally with node, read .env.local)
+scripts/*.mjs
