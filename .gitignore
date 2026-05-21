@@ -44,10 +44,14 @@ held_apply.json
 serper_images.json
 *_review.html
 *_apply.json
+scripts/*.json
 scripts/spec_in/
 scripts/spec_out/
 scripts/name_in/
 scripts/name_out/
+scripts/diff_in/
+scripts/diff_out/
+*_proposal.json
 
 # One-off DB maintenance scripts (run locally with node, read .env.local)
 scripts/*.mjs
