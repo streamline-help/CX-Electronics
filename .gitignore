@@ -42,9 +42,12 @@ apply_set.json
 code_backfill.json
 held_apply.json
 serper_images.json
-serper_review.html
+*_review.html
+*_apply.json
 scripts/spec_in/
 scripts/spec_out/
+scripts/name_in/
+scripts/name_out/
 
 # One-off DB maintenance scripts (run locally with node, read .env.local)
 scripts/*.mjs
