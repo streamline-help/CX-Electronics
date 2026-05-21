@@ -31,6 +31,7 @@ export function AdminProducts() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [categorySlug, setCategorySlug] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [deleting, setDeleting] = useState(false)
   const [applying, setApplying] = useState(false)
@@ -45,8 +46,11 @@ export function AdminProducts() {
     search: debouncedSearch || undefined,
     categorySlug: categorySlug || undefined,
     page,
-    pageSize: 50,
+    pageSize,
   })
+
+  // "All" fetches in one page (catalogue sits under Supabase's 1000-row cap)
+  const VIEW_ALL = 1000
 
   // Debounce search
   const handleSearch = useCallback((value: string) => {
@@ -231,7 +235,9 @@ export function AdminProducts() {
     refetch()
   }
 
-  const totalPages = Math.ceil(totalCount / 50)
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
+  const rangeStart = totalCount === 0 ? 0 : (page - 1) * pageSize + 1
+  const rangeEnd = Math.min(page * pageSize, totalCount)
 
   return (
     <div>
@@ -595,33 +601,70 @@ export function AdminProducts() {
           </div>
         )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
-            <p className="text-sm text-gray-500">
-              Page {page} of {totalPages} · {totalCount} products
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="p-1.5 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-50"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="p-1.5 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-50"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+        {/* Pagination + per-page control */}
+        {totalCount > 0 && (
+          <div className="border-t border-gray-200 px-4 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-3">
+              {/* Left: range + per-page selector */}
+              <div className="flex items-center justify-center sm:justify-start gap-3 order-2 sm:order-1">
+                <span className="text-sm text-gray-500 whitespace-nowrap">
+                  {rangeStart}–{rangeEnd} of {totalCount}
+                </span>
+                <label className="flex items-center gap-1.5 text-sm text-gray-500">
+                  <span className="hidden md:inline">Per page</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
+                    className="text-sm border border-gray-300 rounded-lg pl-2.5 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-cxx-blue cursor-pointer"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={VIEW_ALL}>View all</option>
+                  </select>
+                </label>
+              </div>
+
+              {/* Center: prev / page / next */}
+              <div className="flex items-center justify-center gap-2 sm:gap-3 order-1 sm:order-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className={pagerBtn(page <= 1)}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Previous</span>
+                </button>
+                <span className="text-sm font-semibold text-gray-700 px-1 min-w-[5.5rem] text-center tabular-nums">
+                  Page {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className={pagerBtn(page >= totalPages)}
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Right: spacer keeps the pager centred on desktop */}
+              <div className="hidden sm:block order-3" />
             </div>
           </div>
         )}
       </div>
     </div>
   )
+}
+
+// Bigger, centred prev/next buttons with a subtle red treatment.
+function pagerBtn(disabled: boolean): string {
+  return `inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold border transition-colors ${
+    disabled
+      ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+      : 'border-[#E63939]/30 text-[#E63939] hover:bg-[#FEE9E9] hover:border-[#E63939]/60 active:bg-[#FEE9E9]'
+  }`
 }
 
 function BulkBtn({

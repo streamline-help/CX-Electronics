@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, getProductImageUrl } from '../../lib/supabase'
 import { useCategories } from '../../hooks/useCategories'
 import { useAdminLang } from '../../context/AdminLangContext'
-import type { StockStatus, Variant, ProductVariantGroup } from '../../lib/supabase'
+import type { StockStatus, Variant, ProductVariantGroup, SpecSection } from '../../lib/supabase'
 
 interface FormState {
   name: string
@@ -24,6 +24,7 @@ interface FormState {
   images: string[]
   imageUrls: string[]
   variants: Variant[]
+  specifications: SpecSection[]
   variant_group_id: string
   variant_label: string
 }
@@ -33,7 +34,7 @@ const INITIAL: FormState = {
   category_id: '', retail_price: '', is_bulk_available: false,
   bulk_price: '', bulk_min_qty: '', active: true, featured: false,
   stock_status: 'in_stock', images: [], imageUrls: [], variants: [],
-  variant_group_id: '', variant_label: '',
+  specifications: [], variant_group_id: '', variant_label: '',
 }
 
 function slugify(text: string): string {
@@ -72,7 +73,7 @@ export function ProductForm() {
     async function load() {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, name_zh, slug, description, description_zh, category_id, retail_price, is_bulk_available, bulk_price, bulk_min_qty, active, featured, stock_status, images, thumbnail_url, variants, variant_group_id, variant_label')
+        .select('id, name, name_zh, slug, description, description_zh, category_id, retail_price, is_bulk_available, bulk_price, bulk_min_qty, active, featured, stock_status, images, thumbnail_url, variants, specifications, variant_group_id, variant_label')
         .eq('id', id)
         .single()
 
@@ -102,6 +103,7 @@ export function ProductForm() {
         images,
         imageUrls,
         variants: (data.variants as Variant[]) ?? [],
+        specifications: (data.specifications as SpecSection[]) ?? [],
         variant_group_id: data.variant_group_id ?? '',
         variant_label: data.variant_label ?? '',
       })
@@ -194,6 +196,39 @@ export function ProductForm() {
     set('variants', form.variants.filter((_, i) => i !== index))
   }
 
+  // ── Specifications ──────────────────────────────────────────────────────────
+  // Stored as SpecSection[] = [{ title, items: [{ label, value }] }] — the exact
+  // shape the storefront's <ProductSpecifications> accordion renders.
+
+  function addSpecSection() {
+    set('specifications', [...form.specifications, { title: '', items: [{ label: '', value: '' }] }])
+  }
+
+  function updateSpecTitle(si: number, title: string) {
+    set('specifications', form.specifications.map((s, i) => (i === si ? { ...s, title } : s)))
+  }
+
+  function removeSpecSection(si: number) {
+    set('specifications', form.specifications.filter((_, i) => i !== si))
+  }
+
+  function addSpecItem(si: number) {
+    set('specifications', form.specifications.map((s, i) =>
+      i === si ? { ...s, items: [...s.items, { label: '', value: '' }] } : s))
+  }
+
+  function updateSpecItem(si: number, ii: number, field: 'label' | 'value', value: string) {
+    set('specifications', form.specifications.map((s, i) =>
+      i === si
+        ? { ...s, items: s.items.map((it, j) => (j === ii ? { ...it, [field]: value } : it)) }
+        : s))
+  }
+
+  function removeSpecItem(si: number, ii: number) {
+    set('specifications', form.specifications.map((s, i) =>
+      i === si ? { ...s, items: s.items.filter((_, j) => j !== ii) } : s))
+  }
+
   // ── Validation + submit ───────────────────────────────────────────────────
 
   function validate(): boolean {
@@ -230,6 +265,14 @@ export function ProductForm() {
       images: form.images,
       thumbnail_url: form.images[0] ?? null,
       variants: form.variants.filter((v) => v.name.trim() && v.options.length > 0),
+      specifications: form.specifications
+        .map((s) => ({
+          title: s.title.trim(),
+          items: s.items
+            .map((it) => ({ label: it.label.trim(), value: it.value.trim() }))
+            .filter((it) => it.label || it.value),
+        }))
+        .filter((s) => s.title && s.items.length > 0),
       variant_group_id: form.variant_group_id || null,
       variant_label: form.variant_group_id && form.variant_label.trim() ? form.variant_label.trim() : null,
       updated_at: new Date().toISOString(),
@@ -569,6 +612,92 @@ export function ProductForm() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* ── Specifications ─────────────────────────────── */}
+        <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900">Specifications</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Grouped product info — shown in the "Specifications" tab on the product page</p>
+            </div>
+            <button
+              type="button"
+              onClick={addSpecSection}
+              className="flex items-center gap-1.5 text-sm font-medium text-cxx-blue hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Section
+            </button>
+          </div>
+
+          {form.specifications.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">
+              No specifications yet — click "Add Section" (e.g. "General", "Dimensions") then add label/value rows
+            </p>
+          )}
+
+          <div className="space-y-4">
+            {form.specifications.map((section, si) => (
+              <div key={si} className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={section.title}
+                    onChange={(e) => updateSpecTitle(si, e.target.value)}
+                    className={`${input()} font-semibold`}
+                    placeholder="Section title — e.g. General, Power, Dimensions"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeSpecSection(si)}
+                    title="Remove section"
+                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {section.items.map((item, ii) => (
+                    <div key={ii} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={item.label}
+                        onChange={(e) => updateSpecItem(si, ii, 'label', e.target.value)}
+                        className={`${input()} flex-1`}
+                        placeholder="Label — e.g. Resolution"
+                      />
+                      <input
+                        type="text"
+                        value={item.value}
+                        onChange={(e) => updateSpecItem(si, ii, 'value', e.target.value)}
+                        className={`${input()} flex-1`}
+                        placeholder="Value — e.g. 1080p"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSpecItem(si, ii)}
+                        title="Remove row"
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => addSpecItem(si)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-cxx-blue hover:bg-blue-50 px-2.5 py-1.5 rounded-lg transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Row
+                </button>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* ── Variant Group (optional) ────────────────────── */}
