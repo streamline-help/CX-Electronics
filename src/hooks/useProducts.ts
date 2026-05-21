@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase, getProductImageUrl, type ProductWithCategory } from '../lib/supabase'
+import { applyProductSearch } from '../lib/search'
 
 export type ProductSort = 'newest' | 'price_asc' | 'price_desc' | 'featured' | 'popularity'
 
@@ -90,7 +91,7 @@ export function useProducts(opts: UseProductsOptions = {}): UseProductsResult {
       if (inStockOnly) query = query.eq('stock_status', 'in_stock')
       if (typeof minPrice === 'number') query = query.gte('retail_price', minPrice)
       if (typeof maxPrice === 'number') query = query.lte('retail_price', maxPrice)
-      if (search) query = query.ilike('name', `%${search}%`)
+      if (search) query = applyProductSearch(query, search)
       if (categorySlug) query = query.eq('categories.slug', categorySlug)
 
       const { data, error: err, count } = await query

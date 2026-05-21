@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, X, Loader2, ArrowRight, Package } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, getProductImageUrl } from '../../lib/supabase'
+import { applyProductSearch } from '../../lib/search'
 import { useLang } from '../../context/LangContext'
 
 interface SearchHit {
@@ -62,14 +63,14 @@ export function NavbarSearch({ variant = 'desktop', onNavigate }: NavbarSearchPr
       const ctrl = new AbortController()
       abortRef.current = ctrl
       try {
-        const escaped = q.replace(/[%_,()]/g, ' ').trim()
-        const { data } = await supabase
+        let query = supabase
           .from('products')
           .select(
             'id, name, name_zh, slug, retail_price, thumbnail_url, categories!inner(id, name, slug)',
           )
           .eq('active', true)
-          .or(`name.ilike.%${escaped}%,name_zh.ilike.%${escaped}%,description.ilike.%${escaped}%,slug.ilike.%${escaped}%`)
+        query = applyProductSearch(query, q)
+        const { data } = await query
           .order('featured', { ascending: false })
           .order('created_at', { ascending: false })
           .limit(6)
