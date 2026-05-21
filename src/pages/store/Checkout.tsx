@@ -267,6 +267,7 @@ export function Checkout() {
             quantity: item.quantity,
             unit_price: item.price,
             line_total: item.price * item.quantity,
+            thumbnail_url: item.image || null,
           })),
         },
       })
