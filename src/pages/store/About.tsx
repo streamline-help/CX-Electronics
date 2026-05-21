@@ -68,18 +68,24 @@ export function About() {
     e.preventDefault()
     setSubmitting(true)
 
-    // Persist to admin inbox — fire-and-forget so a transient DB error
-    // never blocks the customer from getting a confirmation.
-    try {
-      await supabase.from('cw_contact_messages').insert({
-        name: form.name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim() || null,
-        inquiry_type: form.type,
-        message: form.message.trim(),
-      })
-    } catch {
-      /* ignore — message is also sent via n8n */
+    const payload = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim() || null,
+      inquiry_type: form.type,
+      message: form.message.trim(),
+    }
+
+    // Save to admin inbox and fire notification webhook — both fire-and-forget.
+    supabase.from('cw_contact_messages').insert(payload).then(() => {})
+
+    const n8nContact = import.meta.env.VITE_N8N_CONTACT as string | undefined
+    if (n8nContact) {
+      fetch(n8nContact, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch(() => {})
     }
 
     setSubmitting(false)
