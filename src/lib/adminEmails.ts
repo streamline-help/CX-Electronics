@@ -3,6 +3,7 @@
 // will enforce it.
 export const ADMIN_EMAILS = [
   'info@cw-electronics.co.za',
+  'martin@cw-electronics.co.za',
 ]
 
 export function isAdminEmail(email: string | null | undefined): boolean {
