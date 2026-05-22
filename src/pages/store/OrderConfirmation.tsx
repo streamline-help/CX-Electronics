@@ -3,6 +3,7 @@ import { useParams, Link, useLocation } from 'react-router-dom'
 import { CheckCircle, Package, FileText, Clock } from 'lucide-react'
 import { Navbar } from '../../components/store/Navbar'
 import { Footer } from '../../components/store/Footer'
+import { BankingDetailsCard } from '../../components/store/BankingDetailsCard'
 import { getOrder } from '../../hooks/useOrders'
 import type { OrderWithDetails } from '../../lib/supabase'
 
@@ -90,6 +91,7 @@ export function OrderConfirmation() {
 
   const addr = order.shipping_address
   const isPaid = order.payment_status === 'paid' || order.status === 'paid'
+  const awaitingEft = !isPaid && order.payment_method === 'eft'
 
   return (
     <div className="min-h-screen bg-cxx-bg">
@@ -113,6 +115,13 @@ export function OrderConfirmation() {
         {isPaid ? (
           <div className="bg-green-50 text-green-700 border border-green-200 rounded-xl p-4 mb-5 text-sm font-medium text-center">
             Payment confirmed — a receipt has been sent to your email.
+          </div>
+        ) : awaitingEft ? (
+          <div className="mb-5">
+            <p className="text-center text-sm text-gray-600 mb-4">
+              Almost there — please pay by EFT to complete your order. We've also emailed these details to you.
+            </p>
+            <BankingDetailsCard reference={order.payment_reference ?? order.order_number} amount={order.total} />
           </div>
         ) : (
           <div className="bg-blue-50 text-blue-700 border border-blue-200 rounded-xl p-4 mb-5 text-sm font-medium text-center">

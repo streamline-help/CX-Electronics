@@ -10,6 +10,7 @@ import { supabase, type ShippingAddress, type OrderWithDetails } from '../../lib
 import { customerSupabase } from '../../lib/customerAuth'
 import { notifyNewOrder } from '../../lib/webhooks'
 import { AddressAutocomplete, type ParsedAddress } from '../../components/store/AddressAutocomplete'
+import { BankingDetailsCard } from '../../components/store/BankingDetailsCard'
 import { getEnabledPaymentMethods, type PaymentMethodId } from '../../lib/payments'
 
 // PayFast still pending Credit Risk approval — orders are created as
@@ -477,13 +478,16 @@ export function Checkout() {
                 </div>
 
                 {paymentMethod === 'eft' && (
-                  <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2 text-amber-800">
-                    <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs leading-relaxed">
-                      {lang === 'zh'
-                        ? '下单后您将看到银行详情，请使用订单号作为付款参考。我们在营业时间（每天 09:00–15:00）确认付款后会以电子邮件通知您。'
-                        : 'After placing your order, you\'ll see our banking details. Use the order number as the payment reference. We confirm payments during trading hours (Mon–Sun 09:00–15:00) and email you once received.'}
-                    </p>
+                  <div className="mt-3 space-y-3">
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2 text-amber-800">
+                      <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs leading-relaxed">
+                        {lang === 'zh'
+                          ? '下单后您将获得唯一的付款参考号（订单号）。我们在营业时间（每天 09:00–15:00）确认付款后会以电子邮件通知您。'
+                          : 'When you place your order you\'ll get a unique payment reference (your order number). We confirm payments during trading hours (Mon–Sun 09:00–15:00) and email you once received.'}
+                      </p>
+                    </div>
+                    <BankingDetailsCard amount={total} showSteps={false} showWhatsApp={false} />
                   </div>
                 )}
               </div>
