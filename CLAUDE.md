@@ -72,14 +72,15 @@ A single React SPA with three audiences:
 - **Why two clients**: a session in one tab/scope doesn't accidentally invalidate the other. Without this, the admin and customer flows fought each other on token refresh.
 - `signOut({ scope: 'local' })` is used in BOTH `useAuth.ts` and `CustomerAuthContext.tsx` — this is intentional. Never change it to global scope.
 
-### 4.2 Admin single-login enforcement (defense in depth)
-1. **Allow-list** — `src/lib/adminEmails.ts` defines the single admin email. To change admins: edit this file + update the Supabase `profiles` row.
+### 4.2 Admin login enforcement (defense in depth)
+Admins (currently TWO: `info@cw-electronics.co.za` and `martin@cw-electronics.co.za`):
+1. **Allow-list** — `src/lib/adminEmails.ts` defines `ADMIN_EMAILS`. To add/remove an admin: edit this array (layers 2–4 all read from it).
 2. **Pre-auth client gate** — `src/pages/admin/Login.tsx` rejects non-allow-listed emails BEFORE calling Supabase auth (saves round-trip + log noise).
 3. **Post-auth client re-check** — same file re-verifies after auth in case the server returned a different email.
 4. **Route protection** — `src/components/admin/ProtectedRoute.tsx` blocks `/admin/*` unless `useAuth().user.email` matches the allow-list.
-5. **Server-side RLS** — admin write/read access is gated by the SQL helper `public.is_cw_admin()` (`lower(auth.jwt()->>'email') = 'info@cw-electronics.co.za'`). It governs the `*_admin_all` policies on `orders`, `customers`, `order_items`, `order_status_events`. `cw_contact_messages` still uses its own admin policy. (The old `profiles.app_role` model is NOT what's enforced — `is_cw_admin()` is.)
+5. **Server-side RLS** — admin write/read access is gated by the SQL helper `public.is_cw_admin()` (`lower(auth.jwt()->>'email') IN ('info@cw-electronics.co.za','martin@cw-electronics.co.za')`). It governs the `*_admin_all` policies on `orders`, `customers`, `order_items`, `order_status_events`. `cw_contact_messages` still uses its own admin policy.
 
-**If a new admin is added, ALL five layers must be updated.**
+**If a new admin is added, ALL FOUR places must be updated: (a) create the Supabase `auth.users` user with `email_confirm`, (b) add the email to `ADMIN_EMAILS`, (c) add the email to the `IN (...)` list in `is_cw_admin()`. There is NO `profiles` table — access is purely the JWT email check, so no profiles row is needed.**
 
 ### 4.3 Customer sign-ups stay OPEN
 Any visitor can register at `/account/register` to track orders + use the wishlist. This is intentional — do NOT disable Supabase auth signups, that would break customer registration. The defense against customer accounts accessing admin data is RLS, not signup gating.
@@ -146,7 +147,7 @@ The Supabase project is multi-tenant — used by several apps. Tables relevant t
 | `order_items` | Line items | `order_id`, `product_id`, `product_name`, `quantity`, `unit_price`, `line_total`, `thumbnail_url` |
 | `order_status_events` | Audit trail for status changes | `order_id`, `status`, `triggered_by` (admin/system/payment_gateway), `created_at` |
 | `customers` | Customer profile (separate from auth.users) | `name`, `email`, `phone`, `address_*`, `city`, `province`, `postal_code` |
-| `profiles` | Auth user profile + role | `id` (= auth.uid), `email`, `name`, `app_role` (`owner`/`staff`/null) |
+| ~~`profiles`~~ | **Removed** — does not exist. Admin access is the JWT email check in `is_cw_admin()`, not a role column. | — |
 | `cw_contact_messages` | Contact form inbox | `name`, `email`, `phone`, `inquiry_type`, `message`, `read`, `replied_at`, `created_at` |
 | `wishlist` | Per-user saved products | `user_id`, `product_id` |
 
@@ -220,7 +221,7 @@ The Supabase project is multi-tenant — used by several apps. Tables relevant t
 | Delivery methods | Collection (free), Economy R100, Next Day R150, Overnight R300 | `Checkout.tsx` |
 | Order number format | `CW-YYYY-NNNN` (e.g. `CW-2026-4821`) | `Checkout.tsx#generateOrderNumber` |
 | Payment reference format | `CW-{Date.now()}` | `Checkout.tsx` |
-| Admin email (single login) | `info@cw-electronics.co.za` | `src/lib/adminEmails.ts` |
+| Admin emails | `info@cw-electronics.co.za`, `martin@cw-electronics.co.za` | `src/lib/adminEmails.ts` + `is_cw_admin()` |
 
 ---
 
@@ -291,7 +292,7 @@ The Supabase project is multi-tenant — used by several apps. Tables relevant t
 5. **Multi-tenant Supabase project** — shared with other apps the user maintains. Some loose policies on shared tables (`orders_read_all = true`) exist but are not owned by CW Electronics. Don't touch without confirming impact.
 6. **Cloudinary single-account** — would benefit from splitting marketing vs product assets.
 7. **Unverified phone format** — phone numbers display as "064 953 3333" in some places, "+27 64 953 3333" in others. Pick one canonical format.
-8. **Supabase admin profile dependency** — current admin user has `app_role = 'owner'` (id `bf71de7c-2ad7-4b4d-b1eb-88252710d906`). If you change the admin email, you must also update or create the `profiles` row OR the admin loses write access via RLS.
+8. **Admin access = JWT email only** — there is NO `profiles` table anymore. Admin RLS is enforced solely by `public.is_cw_admin()` (JWT email ∈ allow-list). Adding an admin = create the auth user + add the email to BOTH `adminEmails.ts` and the `is_cw_admin()` `IN (...)` list. (Earlier docs referenced a `profiles.app_role` row — that table no longer exists.)
 
 ---
 
@@ -379,10 +380,10 @@ Webhooks fail silently if not configured — features that depend on them (welco
 
 ## 14. Quick Reference — Common Tasks
 
-**Change admin email**:
-1. Update `src/lib/adminEmails.ts` → `ADMIN_EMAILS` array.
-2. Make sure the new email has a Supabase auth user.
-3. UPSERT a `profiles` row for that user with `app_role = 'owner'` (otherwise they pass the client gate but fail RLS).
+**Add / change an admin**:
+1. Create the Supabase `auth.users` user (Auth admin API with `email_confirm: true`, or dashboard).
+2. Add the email to `src/lib/adminEmails.ts` → `ADMIN_EMAILS`.
+3. Add the email to the `IN (...)` list inside `public.is_cw_admin()` (otherwise they pass the client gate but RLS blocks all data). There is NO `profiles` table to update.
 
 **Re-enable PayFast**:
 1. Verify merchant account.
@@ -409,6 +410,7 @@ npm run preview      # Preview the built site
 - The local repo doesn't have a `supabase/migrations/` folder — migrations live in the remote project. Document migrations in this CLAUDE.md when applied.
 
 **Recent migrations applied via MCP** (latest first):
+- `2026-05-22 cw_add_martin_admin` — `is_cw_admin()` now matches both `info@` and `martin@cw-electronics.co.za` (was a single hardcoded email). Second admin user created in `auth.users`.
 - `2026-05-18 cw_wishlist_table` — created `wishlist` (user_id→auth.users, product_id→products, unique) with own-row RLS.
 - `2026-05-18 cw_tighten_rls_popia` — replaced `auth.role()='authenticated'` admin_all policies with `is_cw_admin()` + own-row SELECT on orders/customers/order_items; enabled RLS on `order_status_events`; dropped now-unused `*_anon_insert` policies (checkout uses the RPC).
 - `2026-05-18 cw_place_order_rpc` — added SECURITY DEFINER `place_order(jsonb)` (atomic guest/customer checkout) and `is_cw_admin()` helper.
