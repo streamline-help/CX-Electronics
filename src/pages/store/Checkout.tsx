@@ -33,7 +33,7 @@ const DELIVERY_OPTIONS: {
   {
     key: 'collection',
     label: 'Store Collection',
-    sub: 'China Mart, Shop C15, Crown Mines',
+    sub: 'Unit 303, China Cash and Carry, Crown Mines',
     eta: 'Ready within 1–2 hours',
     price: 0,
     icon: Store,
@@ -432,7 +432,7 @@ export function Checkout() {
                   {isCollection && (
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
                       <p className="font-semibold mb-0.5">Collection address</p>
-                      <p className="text-blue-600">China Mart, Shop C15, 3 Press Avenue, Crown Mines, Johannesburg, 2092</p>
+                      <p className="text-blue-600">Unit 303, China Cash and Carry, Cnr Discovery Drive & Renaissance Blvd, Crown Mines, Johannesburg, 2092</p>
                       <p className="text-blue-500 text-xs mt-1">Bring your order number and ID when collecting.</p>
                     </div>
                   )}

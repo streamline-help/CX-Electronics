@@ -77,7 +77,7 @@ export const translations = {
 
     // Footer
     contactUs: 'Contact Us',
-    address_store: 'China Mart, Shop C15, 3 Press Ave, Crown Mines, Johannesburg, 2092',
+    address_store: 'Unit 303, China Cash and Carry, Cnr Discovery Drive & Renaissance Blvd, Crown Mines, Johannesburg, 2092',
     allRightsReserved: 'All rights reserved.',
 
     // Status
@@ -182,7 +182,7 @@ export const translations = {
 
     // Footer
     contactUs: '联系我们',
-    address_store: '约翰内斯堡 Crown Mines, China Mart, C15号',
+    address_store: '约翰内斯堡 Crown Mines, China Cash and Carry, 303号',
     allRightsReserved: '版权所有。',
 
     // Status

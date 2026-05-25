@@ -71,7 +71,7 @@ export function Footer() {
             </div>
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
               Direct importer of consumer electronics. Wholesale &amp; retail from our showroom at
-              China Mart, Crown Mines, Johannesburg.
+              China Cash and Carry, Crown Mines, Johannesburg.
             </p>
           </div>
 
@@ -111,8 +111,8 @@ export function Footer() {
               <li className="flex items-start gap-2.5">
                 <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-slate-500" />
                 <span className="leading-snug">
-                  Shop C15, China Mart<br />
-                  3 Press Avenue, Crown Mines<br />
+                  Unit 303, China Cash and Carry<br />
+                  Cnr Discovery Drive &amp; Renaissance Blvd, Crown Mines<br />
                   Johannesburg, 2092
                 </span>
               </li>

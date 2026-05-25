@@ -166,7 +166,7 @@ export function ShippingPolicy() {
                   label="Store Collection"
                   price="FREE"
                   bullets={[
-                    'Pickup at: Shop C15, China Mart, 3 Press Avenue, Crown Mines, Johannesburg',
+                    'Pickup at: Unit 303, China Cash and Carry, Cnr Discovery Drive & Renaissance Blvd, Crown Mines, Johannesburg',
                     'Ready within 1–2 hours of order confirmation during trading hours',
                     'You will receive an email or WhatsApp notification when your order is ready',
                     'Trading hours: Mon–Sun 09:00–15:00 (open every day)',

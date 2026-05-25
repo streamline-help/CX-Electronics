@@ -36,7 +36,7 @@ export function TopBanner() {
     <div className="bg-[#E63939] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <p className="py-2.5 text-center text-xs sm:text-sm font-medium tracking-wide">
-          Wholesale &amp; Retail Electronics — China Mart, Crown Mines JHB
+          Wholesale &amp; Retail Electronics — China Cash and Carry, Crown Mines JHB
         </p>
       </div>
     </div>
@@ -216,7 +216,7 @@ const BENEFITS = [
   {
     icon: Truck,
     title: 'Same-Day Collection',
-    description: 'China Mart, Crown Mines',
+    description: 'China Cash and Carry, Crown Mines',
   },
   {
     icon: Coins,

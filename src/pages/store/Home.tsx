@@ -38,7 +38,7 @@ const HERO_SLIDES = [
     eyebrow: 'New Stock In',
     title: 'Wholesale Electronics',
     titleAccent: 'Direct Importer',
-    sub: 'Chargers, cables, adapters and routers — straight from the importer. Stocked at China Mart, Crown Mines.',
+    sub: 'Chargers, cables, adapters and routers — straight from the importer. Stocked at China Cash and Carry, Crown Mines.',
     primary: { label: 'Shop Retail', href: '/shop' },
     secondary: { label: 'Browse Bulk Deals', href: '/deals' },
   },
@@ -65,7 +65,7 @@ const CATEGORIES = [
 
 // ── Trust badges ─────────────────────────────────────────────
 const TRUST = [
-  { icon: Clock,      title: 'Same-Day Collection', sub: 'China Mart, Crown Mines' },
+  { icon: Clock,      title: 'Same-Day Collection', sub: 'China Cash and Carry, Crown Mines' },
   { icon: Tag,        title: 'Trade Pricing',        sub: 'From 6+ units' },
   { icon: BadgeCheck, title: 'Direct Importer',      sub: 'Best prices, no middlemen' },
   { icon: RotateCcw,  title: '7-Day Return Policy',  sub: 'Photo required · customer pays return' },
@@ -88,9 +88,9 @@ export function Home() {
     <div className="min-h-screen bg-[#F8FAFC]">
       <SEO
         title="CW Electronics — Wholesale & Retail Electronics in Johannesburg"
-        description="Direct importer of CCTV cameras, NVR kits, WiFi routers, USB chargers, solar lights and smartwatches. Wholesale pricing from 6 units. Same-day Gauteng dispatch, nationwide delivery. China Mart, Crown Mines, JHB."
+        description="Direct importer of CCTV cameras, NVR kits, WiFi routers, USB chargers, solar lights and smartwatches. Wholesale pricing from 6 units. Same-day Gauteng dispatch, nationwide delivery. China Cash and Carry, Crown Mines, JHB."
         url="/"
-        keywords="electronics wholesale Johannesburg, CCTV cameras South Africa, NVR kits, WiFi routers, USB chargers, solar lights, smartwatches, China Mart Crown Mines, electronics importer JHB, wholesale electronics South Africa, trade pricing installers"
+        keywords="electronics wholesale Johannesburg, CCTV cameras South Africa, NVR kits, WiFi routers, USB chargers, solar lights, smartwatches, China Cash and Carry Crown Mines, electronics importer JHB, wholesale electronics South Africa, trade pricing installers"
       />
       <Navbar />
       <HeroCarousel />
@@ -120,7 +120,7 @@ export function Home() {
 const FAQS = [
   {
     q: 'Where is CW Electronics located?',
-    a: "We're at China Mart, Shop C15, 3 Press Avenue, Crown Mines, Johannesburg, 2092. Open every day, 09:00 – 15:00. Walk-ins welcome — bring your order number if collecting.",
+    a: "We're at Unit 303, China Cash and Carry, Cnr Discovery Drive & Renaissance Blvd, Crown Mines, Johannesburg, 2092. Open every day, 09:00 – 15:00. Walk-ins welcome — bring your order number if collecting.",
   },
   {
     q: 'Do you offer wholesale or trade pricing?',
@@ -809,7 +809,7 @@ function ProductCardSkeleton() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LOCATION SECTION — Google Maps + China Mart address
+// LOCATION SECTION — Google Maps + China Cash and Carry address
 // ═══════════════════════════════════════════════════════════════
 function LocationSection() {
   return (
@@ -826,10 +826,10 @@ function LocationSection() {
             Visit Our Showroom
           </p>
           <h2 className="text-3xl sm:text-5xl font-extrabold text-gray-900 text-balance tracking-tight">
-            Find Us at China Mart
+            Find Us at China Cash and Carry
           </h2>
           <p className="text-gray-500 mt-3 text-pretty leading-relaxed">
-            Come see our full range in person. We're at China Mart, Crown Mines —
+            Come see our full range in person. We're at China Cash and Carry, Crown Mines —
             ready to help installers, retailers, and walk-in customers.
           </p>
         </motion.div>
@@ -862,10 +862,10 @@ function LocationSection() {
             </div>
             <h3 className="text-xl font-extrabold mb-2">Our Showroom</h3>
             <p className="text-white/70 text-sm leading-relaxed mb-1">
-              China Mart, Shop C15
+              Unit 303, China Cash and Carry
             </p>
             <p className="text-white/70 text-sm leading-relaxed mb-1">
-              3 Press Avenue
+              Cnr Discovery Drive & Renaissance Blvd
             </p>
             <p className="text-white/70 text-sm leading-relaxed mb-5">
               Crown Mines, Johannesburg, 2092
@@ -963,7 +963,7 @@ function WhyChooseCW() {
               Trusted by retailers, traders &amp; installers across SA
             </h2>
             <p className="text-white/60 leading-relaxed mb-7 text-pretty">
-              CW Electronics is a direct importer based at China Mart, Crown Mines.
+              CW Electronics is a direct importer based at China Cash and Carry, Crown Mines.
               We supply CCTV, networking, solar &amp; mobile electronics at true wholesale
               prices — backed by quality testing and fast nationwide delivery.
             </p>

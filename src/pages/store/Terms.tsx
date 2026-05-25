@@ -284,7 +284,7 @@ export function Terms() {
                   <div>
                     <p className="text-white font-bold text-sm">Visit Us In-Store</p>
                     <p className="text-white/55 text-xs mt-1 leading-relaxed">
-                      China Mart, Shop C15, 3 Press Avenue, Crown Mines, Johannesburg, 2092<br />
+                      Unit 303, China Cash and Carry, Cnr Discovery Drive &amp; Renaissance Blvd, Crown Mines, Johannesburg, 2092<br />
                       Open every day: 09:00&ndash;15:00
                     </p>
                   </div>

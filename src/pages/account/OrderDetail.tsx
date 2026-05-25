@@ -248,8 +248,8 @@ export function AccountOrderDetail() {
         </h3>
         {isCollection ? (
           <div className="text-sm text-white/70 space-y-0.5">
-            <p className="font-semibold text-white">China Mart, Shop C15</p>
-            <p>3 Press Avenue, Crown Mines, Johannesburg</p>
+            <p className="font-semibold text-white">Unit 303, China Cash and Carry</p>
+            <p>Cnr Discovery Drive & Renaissance Blvd, Crown Mines, Johannesburg</p>
             <p className="text-white/40 text-xs mt-1">Mon–Sun 09:00–15:00</p>
             {order.collection_name && (
               <p className="text-white/50 text-xs">Collecting: {order.collection_name}</p>

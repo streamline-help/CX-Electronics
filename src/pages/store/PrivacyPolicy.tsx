@@ -278,7 +278,7 @@ export function PrivacyPolicy() {
                   <div>
                     <p className="text-white font-bold text-sm">Address</p>
                     <p className="text-white/55 text-xs mt-1 leading-relaxed">
-                      China Mart, Shop C15, Crown Mines<br />Johannesburg
+                      Unit 303, China Cash and Carry, Crown Mines<br />Johannesburg
                     </p>
                   </div>
                 </div>

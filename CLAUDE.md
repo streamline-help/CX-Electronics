@@ -14,7 +14,7 @@
   - **Emily** — 064 953 3333 (primary sales + WhatsApp)
   - **Kevin** — 062 805 8899 (customer support)
   - Shared email: `info@cw-electronics.co.za`
-- **Showroom**: China Mart, **Shop C15**, 3 Press Avenue, **Crown Mines**, Johannesburg, **2092**.
+- **Showroom**: **Unit 303**, China Cash and Carry, Cnr Discovery Drive & Renaissance Blvd, **Crown Mines**, Johannesburg, **2092**. (Email/receipt/invoice templates still show the old China Mart / Shop C15 address — only the storefront was updated 2026-05-25.)
 - **Trading hours**: Mon–Sun, 09:00–15:00. **Open every day.**
 - **Website**: https://cw-electronics.co.za
 - **Built by**: Christiaan @ streamline-automations.
@@ -209,7 +209,7 @@ The Supabase project is multi-tenant — used by several apps. Tables relevant t
 | Rule | Value | Where enforced |
 |---|---|---|
 | Trading hours | Mon–Sun 09:00–15:00, open every day | `index.html` schema, Home, Footer, About, Terms, OrderDetail emails |
-| Address | China Mart, Shop C15, 3 Press Avenue, Crown Mines, JHB, 2092 | Footer, Checkout (collection), receipts, About, schema.org |
+| Address | Unit 303, China Cash and Carry, Cnr Discovery Drive & Renaissance Blvd, Crown Mines, JHB, 2092 | Footer, Checkout (collection), About, Home, schema.org (storefront). NOTE: emails/receipts/invoices still carry the old China Mart address — not yet migrated. |
 | WhatsApp number | `27649533333` (Emily) | Navbar, Footer, Home, About, Terms, ProductDetail, Deals, BulkShop, BulkProductDetail, ProductDetailWholesale |
 | Phone numbers | Emily 064 953 3333 / Kevin 062 805 8899 | Footer, Home, About, receipts |
 | Email | info@cw-electronics.co.za | All |
@@ -268,7 +268,7 @@ The Supabase project is multi-tenant — used by several apps. Tables relevant t
 - **Use `t()` everywhere** in admin pages (`useAdminLang`); never hardcode mixed-language strings.
 - **Use `getProductImageUrl()`** when displaying product images — handles both Supabase storage paths and external Cloudinary URLs.
 - **Order numbers**: always `CW-{year}-{seq}` format.
-- **Address**: copy-paste the exact 4-line address — `China Mart, Shop C15 / 3 Press Avenue / Crown Mines, Johannesburg / 2092`.
+- **Address**: copy-paste the exact 4-line address — `Unit 303, China Cash and Carry / Cnr Discovery Drive & Renaissance Blvd / Crown Mines, Johannesburg / 2092`.
 - **Trading hours**: always "Mon–Sun 09:00–15:00" (open every day). Never "Mon–Sat" or "closed Sundays".
 - **WhatsApp number**: `27649533333` (no leading +). Phone hrefs use `+27649533333`.
 - **Animation easing**: `cubic-bezier(0.22, 1, 0.36, 1)` — match existing patterns.
