@@ -491,7 +491,9 @@ export function AdminProducts() {
             <p className="text-sm">No products found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Desktop / tablet table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -599,6 +601,93 @@ export function AdminProducts() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile cards — every control stays visible, no sideways scroll */}
+          <div className="md:hidden divide-y divide-gray-100">
+            {products.map((product) => {
+              const stock = STOCK_LABELS[product.stock_status]
+              return (
+                <div key={product.id} className="p-3 flex gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(product.id)}
+                    onChange={() => toggleSelect(product.id)}
+                    className="mt-1.5 rounded border-gray-300 flex-shrink-0"
+                  />
+                  {product.thumbnail_url ? (
+                    <img
+                      src={getProductImageUrl(product.thumbnail_url, 80)}
+                      alt={product.name}
+                      className="w-12 h-12 rounded-lg object-cover bg-gray-100 flex-shrink-0"
+                      onError={(e) => {
+                        const fallback = product.images?.[0]
+                        if (fallback && e.currentTarget.src !== fallback) {
+                          e.currentTarget.src = getProductImageUrl(fallback, 80)
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 flex items-center justify-center text-gray-300">
+                      <Package className="w-4 h-4" />
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 leading-snug break-words">{product.name}</p>
+                    {product.name_zh && (
+                      <p className="text-xs text-gray-400 truncate">{product.name_zh}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {product.categories?.name ?? '—'} · <span className="font-semibold text-gray-900">R{product.retail_price.toFixed(2)}</span>
+                      {product.is_bulk_available && product.bulk_price && (
+                        <span className="text-cxx-blue"> · WS R{product.bulk_price.toFixed(2)}</span>
+                      )}
+                    </p>
+
+                    <div className="flex items-center flex-wrap gap-2 mt-2.5">
+                      <button
+                        onClick={() => toggleStock(product)}
+                        className={`text-xs px-2 py-1 rounded-full font-medium ${stock.color}`}
+                      >
+                        {stock.label}
+                      </button>
+
+                      <button
+                        onClick={() => toggleActive(product)}
+                        className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full border ${
+                          product.active
+                            ? 'border-cxx-blue/30 text-cxx-blue bg-cxx-blue-light'
+                            : 'border-gray-200 text-gray-500 bg-gray-50'
+                        }`}
+                      >
+                        <span
+                          className={`relative w-7 h-4 rounded-full transition-colors ${
+                            product.active ? 'bg-cxx-blue' : 'bg-gray-300'
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${
+                              product.active ? 'translate-x-3' : 'translate-x-0'
+                            }`}
+                          />
+                        </span>
+                        {product.active ? t('active') : t('inactive')}
+                      </button>
+
+                      <Link
+                        to={`/admin/products/${product.id}`}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors ml-auto"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        {t('edit')}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          </>
         )}
 
         {/* Pagination + per-page control */}
