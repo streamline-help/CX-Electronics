@@ -4,7 +4,7 @@ import { X, ShoppingCart, Minus, Plus, Trash2, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '../../context/CartContext'
 import { useLang } from '../../context/LangContext'
-import { supabase } from '../../lib/supabase'
+import { supabase, getProductImageUrl } from '../../lib/supabase'
 
 interface UpsellProduct {
   id: string
@@ -165,7 +165,7 @@ export function CartDrawer() {
                             className="block w-28 h-28 rounded-xl bg-gray-100 overflow-hidden mb-1.5"
                           >
                             {p.thumbnail_url ? (
-                              <img src={p.thumbnail_url} alt={p.name} className="w-full h-full object-cover" />
+                              <img src={getProductImageUrl(p.thumbnail_url, 200)} alt={p.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <ShoppingCart className="w-5 h-5 text-gray-300" />
@@ -177,7 +177,7 @@ export function CartDrawer() {
                             <span className="text-xs font-bold text-gray-900">R{p.retail_price.toFixed(0)}</span>
                             <button
                               onClick={() => {
-                                addItem({ productId: p.id, name: p.name, price: p.retail_price, image: p.thumbnail_url ?? '', quantity: 1, orderType: 'retail' })
+                                addItem({ productId: p.id, name: p.name, price: p.retail_price, image: p.thumbnail_url ? getProductImageUrl(p.thumbnail_url, 200) : '', quantity: 1, orderType: 'retail' })
                                 setAddedIds((prev) => new Set(prev).add(p.id))
                               }}
                               className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors text-white text-xs font-bold flex-shrink-0 ${added ? 'bg-green-500' : 'bg-cxx-blue hover:bg-cxx-blue-hover'}`}

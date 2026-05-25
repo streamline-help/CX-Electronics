@@ -47,7 +47,7 @@ export function ProductCardLight({ product, basePath = '/shop' }: ProductCardLig
     if (product.images.length > 0) {
       return product.images.slice(0, 4).map((p) => getProductImageUrl(p, 400))
     }
-    return product.thumbnail_url ? [product.thumbnail_url] : []
+    return product.thumbnail_url ? [getProductImageUrl(product.thumbnail_url, 400)] : []
   }, [product.images, product.thumbnail_url])
 
   function startCycling() {
@@ -101,7 +101,7 @@ export function ProductCardLight({ product, basePath = '/shop' }: ProductCardLig
       name: product.name,
       price,
       quantity: isBulkView ? wholesaleMinQty : 1,
-      image: product.thumbnail_url ?? '',
+      image: product.thumbnail_url ? getProductImageUrl(product.thumbnail_url, 400) : '',
       orderType: isBulkView ? 'bulk' : 'retail',
       bulkMinQty: isBulkView ? wholesaleMinQty : undefined,
     })

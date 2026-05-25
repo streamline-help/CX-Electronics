@@ -45,7 +45,7 @@ export function ProductCard({ product, basePath = '/shop', columns = 4 }: Produc
     if (product.images.length > 0) {
       return product.images.slice(0, 4).map((p) => getProductImageUrl(p, 400))
     }
-    return product.thumbnail_url ? [product.thumbnail_url] : []
+    return product.thumbnail_url ? [getProductImageUrl(product.thumbnail_url, 400)] : []
   }, [product.images, product.thumbnail_url])
 
   // Desktop: start cycling on hover
@@ -112,7 +112,7 @@ export function ProductCard({ product, basePath = '/shop', columns = 4 }: Produc
       name: product.name,
       price,
       quantity: isBulkView ? 6 : 1,
-      image: product.thumbnail_url ?? '',
+      image: product.thumbnail_url ? getProductImageUrl(product.thumbnail_url, 400) : '',
       orderType: isBulkView ? 'bulk' : 'retail',
       bulkMinQty: isBulkView ? 6 : undefined,
     })

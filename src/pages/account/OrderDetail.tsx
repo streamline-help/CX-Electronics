@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { getOrder } from '../../hooks/useOrders'
 import { customerSupabase } from '../../lib/customerAuth'
+import { getProductImageUrl } from '../../lib/supabase'
 import type { OrderWithDetails, OrderStatus } from '../../lib/supabase'
 
 const ACCOUNT_ORDER_SELECT = `
@@ -206,7 +207,7 @@ export function AccountOrderDetail() {
           {order.order_items.map((item, i) => (
             <div key={item.id ?? i} className="flex items-center gap-3">
               {item.thumbnail_url ? (
-                <img src={item.thumbnail_url} alt="" className="w-12 h-12 rounded-lg object-cover bg-white/5 flex-shrink-0" />
+                <img src={getProductImageUrl(item.thumbnail_url, 120)} alt="" className="w-12 h-12 rounded-lg object-cover bg-white/5 flex-shrink-0" />
               ) : (
                 <div className="w-12 h-12 rounded-lg bg-white/10 flex-shrink-0" />
               )}

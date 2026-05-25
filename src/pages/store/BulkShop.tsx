@@ -10,6 +10,7 @@ import { Footer } from '../../components/store/Footer'
 import SEO from '../../components/SEO'
 import { ProductCard } from '../../components/store/ProductCard'
 import { useProducts, type ProductSort } from '../../hooks/useProducts'
+import { getProductImageUrl } from '../../lib/supabase'
 import { useCategories } from '../../hooks/useCategories'
 
 const WHATSAPP_NUMBER = '27649533333'
@@ -194,7 +195,7 @@ export function BulkShop() {
                             <Link to={`/bulk/${p.slug}`} className="flex items-center gap-3 group">
                               <div className="w-10 h-10 bg-white/5 rounded-lg overflow-hidden flex-shrink-0">
                                 {p.thumbnail_url ? (
-                                  <img src={p.thumbnail_url} alt={p.name} className="w-full h-full object-contain p-1" />
+                                  <img src={getProductImageUrl(p.thumbnail_url, 120)} alt={p.name} className="w-full h-full object-contain p-1" />
                                 ) : (
                                   <Package className="w-full h-full p-2 text-white/30" />
                                 )}

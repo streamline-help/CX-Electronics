@@ -2,6 +2,7 @@ import { Plus, ShoppingCart } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useProducts } from '../../hooks/useProducts'
 import { useCart } from '../../context/CartContext'
+import { getProductImageUrl } from '../../lib/supabase'
 
 interface Props {
   currentProductId: string
@@ -41,7 +42,7 @@ export function FrequentlyBoughtTogether({
 
   const allItems = [
     currentItem,
-    ...companions.map((p) => ({ id: p.id, name: p.name, price: p.retail_price, image: p.thumbnail_url ?? '' })),
+    ...companions.map((p) => ({ id: p.id, name: p.name, price: p.retail_price, image: p.thumbnail_url ? getProductImageUrl(p.thumbnail_url, 200) : '' })),
   ]
   const totalPrice = companions.reduce((sum, p) => sum + p.retail_price, currentProductPrice)
 
@@ -52,7 +53,7 @@ export function FrequentlyBoughtTogether({
         name: product.name,
         price: product.retail_price,
         quantity: 1,
-        image: product.thumbnail_url ?? '',
+        image: product.thumbnail_url ? getProductImageUrl(product.thumbnail_url, 200) : '',
         orderType: 'retail',
         categorySlug: product.categories?.slug,
       })
