@@ -11,6 +11,8 @@ interface ImportMetaEnv {
   readonly VITE_N8N_STATUS_CHANGE?: string
   readonly VITE_N8N_SIGNUP?: string
   readonly VITE_PWA_INSTALL_PASSWORD?: string
+  readonly VITE_CLOUDINARY_CLOUD_NAME?: string
+  readonly VITE_CLOUDINARY_UPLOAD_PRESET?: string
 }
 
 interface ImportMeta {

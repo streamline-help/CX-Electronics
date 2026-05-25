@@ -234,10 +234,11 @@ The Supabase project is multi-tenant — used by several apps. Tables relevant t
 - Edge function: `supabase/functions/payfast-itn/` (PayFast Instant Transaction Notification — currently dormant).
 
 ### 9.2 Cloudinary
-- Account: `dzhwylkfr`.
-- All hero images, category banners, and logo live here.
-- Product images on imported items live here (`getProductImageUrl()` in `src/lib/supabase.ts` handles external URL passthrough so Cloudinary URLs aren't mangled by Supabase Storage's `getPublicUrl`).
-- **Known issue**: would benefit from splitting marketing assets from product assets into separate accounts so rate limits don't cross-impact.
+- **Marketing account: `dzhwylkfr`** — all hero images, category banners, logo, and originally-imported product images live here. These are stored in the DB as full https URLs and keep working forever via `getProductImageUrl()`.
+- **New product-upload account: `oiuiyrdu`** — as of 2026-05-25, every NEW image uploaded from the admin Product form (`src/pages/admin/ProductForm.tsx`) goes here, via the unsigned upload preset `cw_products` (uploads land in the `cw-products/` folder). See `src/lib/cloudinary.ts`. Overridable with `VITE_CLOUDINARY_CLOUD_NAME` / `VITE_CLOUDINARY_UPLOAD_PRESET`.
+- **The returned `secure_url` (full https link) is stored directly in `products.images`.** `getProductImageUrl()` (`src/lib/supabase.ts`) passes any full URL through unchanged, so all three image generations coexist with zero migration: (1) old `dzhwylkfr` Cloudinary URLs, (2) legacy Supabase Storage paths uploaded before this change, (3) new `oiuiyrdu` Cloudinary URLs.
+- **Never put the Cloudinary API secret in frontend code** — unsigned uploads only need the cloud name + preset.
+- **Known issue**: marketing (`dzhwylkfr`) and product (`oiuiyrdu`) assets are now on separate accounts; older imported product images still sit on the marketing account.
 
 ### 9.3 PayFast
 - `src/lib/payfast.ts` — signing + redirect logic.
@@ -339,6 +340,7 @@ src/
 │   ├── cart.ts                      # Cart shape (subtotal-only, no shipping until checkout)
 │   ├── wholesale.ts                 # 6+ min, 15–25% hash-seeded discount
 │   ├── payfast.ts                   # PayFast signing (currently bypassed)
+│   ├── cloudinary.ts                # Unsigned Cloudinary upload for new admin product images (account oiuiyrdu)
 │   ├── webhooks.ts                  # n8n event dispatchers
 │   ├── generateReceipt.ts           # HTML receipt template (used for print + emails)
 │   ├── translations.ts              # Storefront translations
@@ -373,6 +375,8 @@ tailwind.config.js                   # Brand colour aliases
 | `VITE_N8N_NEW_ORDER` | optional | Webhook URL for new orders |
 | `VITE_N8N_STATUS_CHANGE` | optional | Webhook URL for order status changes |
 | `VITE_N8N_SIGNUP` | optional | Webhook URL for new customer signup |
+| `VITE_CLOUDINARY_CLOUD_NAME` | optional | Cloudinary cloud name for new admin image uploads (defaults to `oiuiyrdu` in `src/lib/cloudinary.ts`) |
+| `VITE_CLOUDINARY_UPLOAD_PRESET` | optional | Unsigned Cloudinary upload preset (defaults to `cw_products`) |
 
 Webhooks fail silently if not configured — features that depend on them (welcome email, order confirmation email) just skip.
 

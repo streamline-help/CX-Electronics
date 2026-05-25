@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Upload, X, ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, getProductImageUrl } from '../../lib/supabase'
+import { uploadToCloudinary } from '../../lib/cloudinary'
 import { useCategories } from '../../hooks/useCategories'
 import { useAdminLang } from '../../context/AdminLangContext'
 import type { StockStatus, Variant, ProductVariantGroup, SpecSection } from '../../lib/supabase'
@@ -128,28 +129,31 @@ export function ProductForm() {
     if (!files.length) return
     setUploading(true)
 
-    const newPaths: string[] = []
+    // New images upload to Cloudinary. We store the returned full https URL in
+    // both `images` (saved to the DB) and `imageUrls` (display) — getProductImageUrl
+    // passes full URLs through unchanged, so old images keep working too.
     const newUrls: string[] = []
+    let failed = 0
 
     for (const file of files) {
-      const ext = file.name.split('.').pop()
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage.from('products').upload(path, file, {
-        cacheControl: '3600',
-        upsert: false,
-      })
-      if (!error) {
-        newPaths.push(path)
-        newUrls.push(getProductImageUrl(path, 400))
+      try {
+        newUrls.push(await uploadToCloudinary(file))
+      } catch (err) {
+        console.error('Image upload failed', err)
+        failed++
       }
     }
 
     setForm((prev) => ({
       ...prev,
-      images: [...prev.images, ...newPaths],
+      images: [...prev.images, ...newUrls],
       imageUrls: [...prev.imageUrls, ...newUrls],
     }))
     setUploading(false)
+
+    if (failed > 0) {
+      alert(`${failed} image${failed > 1 ? 's' : ''} failed to upload. Please try again.`)
+    }
   }
 
   function removeImage(index: number) {
