@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Plus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Package,
   Tag, Percent, BadgeCheck, X as XIcon,
@@ -27,6 +27,7 @@ type BulkAction =
 
 export function AdminProducts() {
   const { t } = useAdminLang()
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [categorySlug, setCategorySlug] = useState('')
@@ -233,6 +234,13 @@ export function AdminProducts() {
       .update({ stock_status: next, updated_at: new Date().toISOString() })
       .eq('id', product.id)
     refetch()
+  }
+
+  // Open the product when a row/card is clicked — but if the user was dragging
+  // to select text (e.g. the name), leave them be and don't navigate.
+  function openProduct(id: string) {
+    if (window.getSelection()?.toString()) return
+    navigate(`/admin/products/${id}`)
   }
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
@@ -517,8 +525,12 @@ export function AdminProducts() {
                 {products.map((product) => {
                   const stock = STOCK_LABELS[product.stock_status]
                   return (
-                    <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="pl-4 pr-2 py-3">
+                    <tr
+                      key={product.id}
+                      onClick={() => openProduct(product.id)}
+                      className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                    >
+                      <td className="pl-4 pr-2 py-3" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selected.has(product.id)}
@@ -566,7 +578,7 @@ export function AdminProducts() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <button
-                          onClick={() => toggleStock(product)}
+                          onClick={(e) => { e.stopPropagation(); toggleStock(product) }}
                           className={`text-xs px-2 py-0.5 rounded-full font-medium ${stock.color}`}
                           title="Click to toggle"
                         >
@@ -575,7 +587,7 @@ export function AdminProducts() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <button
-                          onClick={() => toggleActive(product)}
+                          onClick={(e) => { e.stopPropagation(); toggleActive(product) }}
                           className={`relative w-9 h-5 rounded-full transition-colors ${
                             product.active ? 'bg-cxx-blue' : 'bg-gray-300'
                           }`}
@@ -587,7 +599,7 @@ export function AdminProducts() {
                           />
                         </button>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <Link
                           to={`/admin/products/${product.id}`}
                           className="inline-flex items-center justify-center w-8 h-8 text-gray-500 hover:text-cxx-blue hover:bg-cxx-blue-light rounded-lg transition-colors"
@@ -607,11 +619,16 @@ export function AdminProducts() {
             {products.map((product) => {
               const stock = STOCK_LABELS[product.stock_status]
               return (
-                <div key={product.id} className="p-3 flex gap-3">
+                <div
+                  key={product.id}
+                  onClick={() => openProduct(product.id)}
+                  className="p-3 flex gap-3 cursor-pointer active:bg-gray-50"
+                >
                   <input
                     type="checkbox"
                     checked={selected.has(product.id)}
                     onChange={() => toggleSelect(product.id)}
+                    onClick={(e) => e.stopPropagation()}
                     className="mt-1.5 rounded border-gray-300 flex-shrink-0"
                   />
                   {product.thumbnail_url ? (
@@ -646,14 +663,14 @@ export function AdminProducts() {
 
                     <div className="flex items-center flex-wrap gap-2 mt-2.5">
                       <button
-                        onClick={() => toggleStock(product)}
+                        onClick={(e) => { e.stopPropagation(); toggleStock(product) }}
                         className={`text-xs px-2 py-1 rounded-full font-medium ${stock.color}`}
                       >
                         {stock.label}
                       </button>
 
                       <button
-                        onClick={() => toggleActive(product)}
+                        onClick={(e) => { e.stopPropagation(); toggleActive(product) }}
                         className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full border ${
                           product.active
                             ? 'border-cxx-blue/30 text-cxx-blue bg-cxx-blue-light'
@@ -676,6 +693,7 @@ export function AdminProducts() {
 
                       <Link
                         to={`/admin/products/${product.id}`}
+                        onClick={(e) => e.stopPropagation()}
                         className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors ml-auto"
                       >
                         <Edit className="w-3.5 h-3.5" />
