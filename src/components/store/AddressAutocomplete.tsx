@@ -6,7 +6,7 @@ import { MapPin, Loader2, AlertCircle } from 'lucide-react'
 
 const API_KEY =
   (import.meta.env.VITE_GEOAPIFY_API_KEY as string | undefined) ||
-  'a3a2df68989545a2a2b7e0b5806a9f05'
+  'faa0700ea6ed45fb88a921d4233cfa6b'
 
 export interface ParsedAddress {
   address_line1: string
