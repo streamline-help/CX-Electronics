@@ -21,7 +21,7 @@ export function useProduct(slug: string): UseProductResult {
       const { data, error: err } = await supabase
         .from('products')
         .select(
-          'id, name, name_zh, slug, description, description_zh, category_id, retail_price, bulk_price, bulk_min_qty, is_bulk_available, images, thumbnail_url, active, featured, stock_status, variants, variant_group_id, variant_label, specifications, created_at, updated_at, categories(id, name, name_zh, slug)',
+          'id, name, name_zh, slug, description, description_zh, category_id, brand, gtin, mpn, retail_price, bulk_price, bulk_min_qty, is_bulk_available, images, thumbnail_url, active, featured, stock_status, variants, variant_group_id, variant_label, specifications, created_at, updated_at, categories(id, name, name_zh, slug)',
         )
         .eq('slug', slug)
         .eq('active', true)

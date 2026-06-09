@@ -169,7 +169,11 @@ export function ProductDetail() {
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO
-        title={product.name}
+        title={
+          product.brand && !new RegExp(`\\b${product.brand}\\b`, 'i').test(product.name)
+            ? `${product.brand} ${product.name}`
+            : product.name
+        }
         description={
           product.description
             ? product.description.replace(/\s+/g, ' ').slice(0, 160)
@@ -197,7 +201,9 @@ export function ProductDetail() {
           description: (product.description ?? product.name).replace(/\s+/g, ' ').slice(0, 5000),
           image: images.filter(Boolean),
           sku: product.id,
-          brand: 'CW Electronics',
+          brand: product.brand ?? 'CW Electronics',
+          ...(product.gtin ? { gtin: product.gtin } : {}),
+          ...(product.mpn ? { mpn: product.mpn } : {}),
           category: product.categories?.name,
           price: product.retail_price,
           currency: 'ZAR',

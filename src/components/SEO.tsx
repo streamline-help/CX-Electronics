@@ -15,6 +15,8 @@ interface ProductSchema {
   image: string | string[]
   sku?: string
   brand?: string
+  gtin?: string
+  mpn?: string
   category?: string
   price: number
   currency?: string
@@ -75,6 +77,8 @@ export default function SEO({
     description: product.description,
     image: Array.isArray(product.image) ? product.image : [product.image],
     ...(product.sku && { sku: product.sku }),
+    ...(product.gtin && { gtin: product.gtin }),
+    ...(product.mpn && { mpn: product.mpn }),
     ...(product.brand && { brand: { '@type': 'Brand', name: product.brand } }),
     ...(product.category && { category: product.category }),
     offers: {

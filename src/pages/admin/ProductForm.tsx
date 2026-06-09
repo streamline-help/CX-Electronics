@@ -15,6 +15,9 @@ interface FormState {
   description: string
   description_zh: string
   category_id: string
+  brand: string
+  gtin: string
+  mpn: string
   retail_price: string
   is_bulk_available: boolean
   bulk_price: string
@@ -32,7 +35,7 @@ interface FormState {
 
 const INITIAL: FormState = {
   name: '', name_zh: '', slug: '', description: '', description_zh: '',
-  category_id: '', retail_price: '', is_bulk_available: false,
+  category_id: '', brand: '', gtin: '', mpn: '', retail_price: '', is_bulk_available: false,
   bulk_price: '', bulk_min_qty: '', active: true, featured: false,
   stock_status: 'in_stock', images: [], imageUrls: [], variants: [],
   specifications: [], variant_group_id: '', variant_label: '',
@@ -74,7 +77,7 @@ export function ProductForm() {
     async function load() {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, name_zh, slug, description, description_zh, category_id, retail_price, is_bulk_available, bulk_price, bulk_min_qty, active, featured, stock_status, images, thumbnail_url, variants, specifications, variant_group_id, variant_label')
+        .select('id, name, name_zh, slug, description, description_zh, category_id, brand, gtin, mpn, retail_price, is_bulk_available, bulk_price, bulk_min_qty, active, featured, stock_status, images, thumbnail_url, variants, specifications, variant_group_id, variant_label')
         .eq('id', id)
         .single()
 
@@ -94,6 +97,9 @@ export function ProductForm() {
         description: data.description ?? '',
         description_zh: data.description_zh ?? '',
         category_id: data.category_id ?? '',
+        brand: data.brand ?? '',
+        gtin: data.gtin ?? '',
+        mpn: data.mpn ?? '',
         retail_price: String(data.retail_price ?? ''),
         is_bulk_available: data.is_bulk_available ?? false,
         bulk_price: data.bulk_price ? String(data.bulk_price) : '',
@@ -259,6 +265,9 @@ export function ProductForm() {
       description: form.description.trim() || null,
       description_zh: null,
       category_id: form.category_id || null,
+      brand: form.brand.trim() || null,
+      gtin: form.gtin.trim() || null,
+      mpn: form.mpn.trim() || null,
       retail_price: Number(form.retail_price),
       is_bulk_available: form.is_bulk_available,
       bulk_price: form.is_bulk_available && form.bulk_price ? Number(form.bulk_price) : null,
@@ -358,6 +367,38 @@ export function ProductForm() {
               ))}
             </select>
           </Field>
+
+          <Field label={t('brand')}>
+            <input
+              type="text"
+              value={form.brand}
+              onChange={(e) => set('brand', e.target.value)}
+              className={input()}
+              placeholder="Hikvision, TP-Link, CJ…"
+            />
+            <p className="text-xs text-gray-400 mt-1">Used in Google Shopping feed &amp; product structured data.</p>
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t('gtin')}>
+              <input
+                type="text"
+                value={form.gtin}
+                onChange={(e) => set('gtin', e.target.value)}
+                className={input()}
+                placeholder="EAN / UPC barcode"
+              />
+            </Field>
+            <Field label={t('mpn')}>
+              <input
+                type="text"
+                value={form.mpn}
+                onChange={(e) => set('mpn', e.target.value)}
+                className={input()}
+                placeholder="Manufacturer part no."
+              />
+            </Field>
+          </div>
 
           <Field label={t('description')}>
             <textarea

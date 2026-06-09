@@ -55,3 +55,5 @@ scripts/diff_out/
 
 # One-off DB maintenance scripts (run locally with node, read .env.local)
 scripts/*.mjs
+# ...except the SEO generator, which runs in the Netlify build (see package.json)
+!scripts/generate-seo.mjs

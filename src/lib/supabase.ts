@@ -109,6 +109,9 @@ export interface Product {
   description: string | null
   description_zh: string | null
   category_id: string | null
+  brand: string | null
+  gtin: string | null
+  mpn: string | null
   retail_price: number
   bulk_price: number | null
   bulk_min_qty: number | null
