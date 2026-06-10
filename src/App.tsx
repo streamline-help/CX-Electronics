@@ -50,18 +50,19 @@ import { Wholesale } from './pages/store/Wholesale'
 import { BulkProductDetail } from './pages/store/BulkProductDetail'
 import { Deals } from './pages/store/Deals'
 import { About } from './pages/store/About'
-import { Blog } from './pages/store/Blog'
-import { BlogPost } from './pages/store/BlogPost'
+// Low-traffic / non-landing store pages — lazy-loaded to keep the initial bundle lean.
+const Blog = lazy(() => import('./pages/store/Blog').then((m) => ({ default: m.Blog })))
+const BlogPost = lazy(() => import('./pages/store/BlogPost').then((m) => ({ default: m.BlogPost })))
 import { Terms } from './pages/store/Terms'
 import { ShippingPolicy } from './pages/store/ShippingPolicy'
 import { RefundPolicy } from './pages/store/RefundPolicy'
 import { PrivacyPolicy } from './pages/store/PrivacyPolicy'
 import { CartPage } from './pages/store/CartPage'
 import { Checkout } from './pages/store/Checkout'
-import { OrderConfirmation } from './pages/store/OrderConfirmation'
-import { PublicReceipt } from './pages/store/Receipt'
-import { RetailInvoice } from './pages/invoices/RetailInvoice'
-import { WholesaleInvoice } from './pages/invoices/WholesaleInvoice'
+const OrderConfirmation = lazy(() => import('./pages/store/OrderConfirmation').then((m) => ({ default: m.OrderConfirmation })))
+const PublicReceipt = lazy(() => import('./pages/store/Receipt').then((m) => ({ default: m.PublicReceipt })))
+const RetailInvoice = lazy(() => import('./pages/invoices/RetailInvoice').then((m) => ({ default: m.RetailInvoice })))
+const WholesaleInvoice = lazy(() => import('./pages/invoices/WholesaleInvoice').then((m) => ({ default: m.WholesaleInvoice })))
 
 // Admin — lazy loaded (never bundled with store)
 const AdminLogin = lazy(() => import('./pages/admin/Login').then((m) => ({ default: m.AdminLogin })))
@@ -109,8 +110,8 @@ export default function App() {
             <Route path="/bulk" element={<Navigate to="/wholesale" replace />} />
             <Route path="/bulk/:slug" element={<BulkProductDetail />} />
             <Route path="/deals" element={<Deals />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/blog" element={<Suspense fallback={<AdminFallback />}><Blog /></Suspense>} />
+            <Route path="/blog/:slug" element={<Suspense fallback={<AdminFallback />}><BlogPost /></Suspense>} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<About />} />
             <Route path="/terms" element={<Terms />} />
@@ -120,10 +121,10 @@ export default function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order/:id" element={<OrderConfirmation />} />
-            <Route path="/receipt/:id" element={<PublicReceipt />} />
-            <Route path="/invoice/retail" element={<RetailInvoice />} />
-            <Route path="/invoice/wholesale" element={<WholesaleInvoice />} />
+            <Route path="/order/:id" element={<Suspense fallback={<AdminFallback />}><OrderConfirmation /></Suspense>} />
+            <Route path="/receipt/:id" element={<Suspense fallback={<AdminFallback />}><PublicReceipt /></Suspense>} />
+            <Route path="/invoice/retail" element={<Suspense fallback={<AdminFallback />}><RetailInvoice /></Suspense>} />
+            <Route path="/invoice/wholesale" element={<Suspense fallback={<AdminFallback />}><WholesaleInvoice /></Suspense>} />
 
             {/* ── Customer account ──────────────────────────────── */}
             <Route path="/account/login"           element={<Suspense fallback={<AdminFallback />}><AccountLogin /></Suspense>} />

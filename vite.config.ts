@@ -120,8 +120,13 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Admin bundle — never loaded on store pages
-          'admin-vendor': ['react-router-dom'],
+          // Split big shared vendors into their own long-cached chunks so app-code
+          // deploys don't re-download them, and they load in parallel on first paint.
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'motion': ['framer-motion'],
+          'supabase': ['@supabase/supabase-js'],
+          // recharts is only imported by the (lazy) admin Dashboard, so it already
+          // splits into that chunk — no need to list it here.
         },
       },
     },
