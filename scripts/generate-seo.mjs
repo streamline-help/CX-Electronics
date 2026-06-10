@@ -28,6 +28,7 @@ const STATIC_PAGES = [
   { path: '/shop', changefreq: 'daily', priority: '0.9' },
   { path: '/wholesale', changefreq: 'weekly', priority: '0.8' },
   { path: '/deals', changefreq: 'daily', priority: '0.8' },
+  { path: '/blog', changefreq: 'weekly', priority: '0.6' },
   { path: '/about', changefreq: 'monthly', priority: '0.5' },
   { path: '/terms', changefreq: 'yearly', priority: '0.3' },
   { path: '/shipping-policy', changefreq: 'yearly', priority: '0.3' },
@@ -45,6 +46,13 @@ const GOOGLE_CATEGORY = {
   household: 'Home & Garden > Household Supplies',
   automobile: 'Electronics > Vehicle Electronics',
 }
+
+// Blog post slugs — keep in sync with src/lib/blog.ts (BLOG_POSTS).
+const BLOG_POSTS = [
+  { slug: 'best-home-cctv-south-africa', lastmod: '2026-06-10' },
+  { slug: 'solar-vs-wired-security-cameras', lastmod: '2026-06-10' },
+  { slug: '4g-lte-router-load-shedding-south-africa', lastmod: '2026-06-10' },
+]
 
 const AVAILABILITY = {
   in_stock: 'in_stock',
@@ -140,6 +148,7 @@ function buildSitemap(products, categories, today) {
   for (const s of STATIC_PAGES) push(s.path, s.changefreq, s.priority, today)
   // Only index category landing pages that actually have products (avoid thin/soft-404 pages).
   for (const c of categories) push(`/category/${c.slug}`, 'weekly', '0.7', today)
+  for (const b of BLOG_POSTS) push(`/blog/${b.slug}`, 'monthly', '0.6', b.lastmod)
   for (const p of products) {
     const lastmod = (p.updated_at || p.created_at || '').slice(0, 10) || today
     push(`/shop/${p.slug}`, 'weekly', '0.7', lastmod, firstImage(p))

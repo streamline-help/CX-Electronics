@@ -85,6 +85,7 @@ export function Footer() {
               <li><Link to="/shop" className="hover:text-white transition-colors">{t('shop')}</Link></li>
               <li><Link to="/wholesale" className="hover:text-white transition-colors">Wholesale</Link></li>
               <li><Link to="/deals" className="hover:text-white transition-colors">Deals</Link></li>
+              <li><Link to="/blog" className="hover:text-white transition-colors">Buying Guides</Link></li>
               <li><Link to="/about" className="hover:text-white transition-colors">About &amp; Contact</Link></li>
             </ul>
           </div>

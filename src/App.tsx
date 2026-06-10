@@ -50,6 +50,8 @@ import { Wholesale } from './pages/store/Wholesale'
 import { BulkProductDetail } from './pages/store/BulkProductDetail'
 import { Deals } from './pages/store/Deals'
 import { About } from './pages/store/About'
+import { Blog } from './pages/store/Blog'
+import { BlogPost } from './pages/store/BlogPost'
 import { Terms } from './pages/store/Terms'
 import { ShippingPolicy } from './pages/store/ShippingPolicy'
 import { RefundPolicy } from './pages/store/RefundPolicy'
@@ -107,6 +109,8 @@ export default function App() {
             <Route path="/bulk" element={<Navigate to="/wholesale" replace />} />
             <Route path="/bulk/:slug" element={<BulkProductDetail />} />
             <Route path="/deals" element={<Deals />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<About />} />
             <Route path="/terms" element={<Terms />} />
