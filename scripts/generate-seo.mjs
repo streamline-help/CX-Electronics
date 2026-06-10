@@ -138,7 +138,8 @@ function buildSitemap(products, categories, today) {
   }
 
   for (const s of STATIC_PAGES) push(s.path, s.changefreq, s.priority, today)
-  for (const c of categories) push(`/shop?category=${c.slug}`, 'weekly', '0.6', today)
+  // Only index category landing pages that actually have products (avoid thin/soft-404 pages).
+  for (const c of categories) push(`/category/${c.slug}`, 'weekly', '0.7', today)
   for (const p of products) {
     const lastmod = (p.updated_at || p.created_at || '').slice(0, 10) || today
     push(`/shop/${p.slug}`, 'weekly', '0.7', lastmod, firstImage(p))
@@ -234,18 +235,22 @@ async function main() {
     return
   }
 
-  const cats = categories || []
+  const allCats = categories || []
   if (cErr) console.warn('[generate-seo] category fetch failed, continuing without categories:', cErr.message)
 
   const catBySlugName = { byId: {} }
-  for (const c of cats) catBySlugName.byId[c.id] = c
+  for (const c of allCats) catBySlugName.byId[c.id] = c
 
-  writeFileSync(join(DIST, 'sitemap.xml'), buildSitemap(products, cats, today))
+  // Sitemap: only category pages that have at least one active product.
+  const catIdsWithProducts = new Set(products.map((p) => p.category_id).filter(Boolean))
+  const sitemapCats = allCats.filter((c) => catIdsWithProducts.has(c.id))
+
+  writeFileSync(join(DIST, 'sitemap.xml'), buildSitemap(products, sitemapCats, today))
   const { feed, count, skipped } = buildFeed(products, catBySlugName)
   writeFileSync(join(DIST, 'feed.xml'), feed)
 
   console.log(
-    `[generate-seo] sitemap: ${STATIC_PAGES.length} static + ${cats.length} categories + ${products.length} products.`,
+    `[generate-seo] sitemap: ${STATIC_PAGES.length} static + ${sitemapCats.length} categories + ${products.length} products.`,
   )
   console.log(`[generate-seo] feed.xml: ${count} items (${skipped} skipped for missing image/price).`)
 }

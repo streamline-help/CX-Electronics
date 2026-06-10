@@ -43,7 +43,7 @@ export function CategoryGrid({
               return (
                 <Link
                   key={c.id}
-                  to={`/shop?category=${c.slug}`}
+                  to={`/category/${c.slug}`}
                   className="group flex items-center gap-2 bg-white border border-gray-200 hover:border-[#E63939] hover:bg-[#FEE9E9] text-gray-700 hover:text-[#E63939] text-xs font-bold px-3.5 py-2 rounded-full transition-colors whitespace-nowrap flex-shrink-0"
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -96,7 +96,7 @@ export function CategoryGrid({
                   whileHover={{ y: -4 }}
                 >
                   <Link
-                    to={`/shop?category=${c.slug}`}
+                    to={`/category/${c.slug}`}
                     className="group flex flex-col items-center justify-center gap-2.5 aspect-[4/3] bg-white border border-gray-200 hover:border-[#E63939]/60 hover:shadow-xl hover:shadow-[#E63939]/10 rounded-2xl transition-all p-3 text-center"
                   >
                     <div className="w-11 h-11 sm:w-12 sm:h-12 bg-[#FEE9E9] group-hover:bg-[#E63939] rounded-xl flex items-center justify-center transition-colors flex-shrink-0">

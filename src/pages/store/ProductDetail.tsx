@@ -193,7 +193,7 @@ export function ProductDetail() {
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Shop', url: '/shop' },
-          ...(product.categories ? [{ name: product.categories.name, url: `/shop?category=${product.categories.slug}` }] : []),
+          ...(product.categories ? [{ name: product.categories.name, url: `/category/${product.categories.slug}` }] : []),
           { name: product.name, url: `/shop/${product.slug}` },
         ]}
         product={{
@@ -224,7 +224,7 @@ export function ProductDetail() {
           {product.categories && (
             <>
               <span>/</span>
-              <Link to={`/shop?category=${product.categories.slug}`} className="hover:text-[#E63939] transition-colors">
+              <Link to={`/category/${product.categories.slug}`} className="hover:text-[#E63939] transition-colors">
                 {product.categories.name}
               </Link>
             </>
@@ -297,7 +297,7 @@ export function ProductDetail() {
           <div className="lg:col-span-5">
             {product.categories && (
               <Link
-                to={`/shop?category=${product.categories.slug}`}
+                to={`/category/${product.categories.slug}`}
                 className="text-xs font-bold text-[#E63939] uppercase tracking-widest hover:underline"
               >
                 {product.categories.name}
@@ -668,7 +668,7 @@ export function ProductDetail() {
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Related Products</h2>
               </div>
               <Link
-                to={`/shop${product.categories ? `?category=${product.categories.slug}` : ''}`}
+                to={product.categories ? `/category/${product.categories.slug}` : '/shop'}
                 className="hidden sm:inline-flex items-center gap-1 text-sm font-bold text-[#E63939] hover:gap-2 transition-all"
               >
                 View all <ArrowLeft className="w-4 h-4 rotate-180" />

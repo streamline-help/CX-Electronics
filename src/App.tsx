@@ -43,6 +43,7 @@ const Wishlist        = lazy(() => import('./pages/account/Wishlist').then((m) =
 // Public store — eagerly loaded
 import { Home } from './pages/store/Home'
 import { Shop } from './pages/store/Shop'
+import { CategoryPage } from './pages/store/CategoryPage'
 import { ProductDetail } from './pages/store/ProductDetail'
 import { VariantProductDetail } from './pages/store/VariantProductDetail'
 import { Wholesale } from './pages/store/Wholesale'
@@ -99,6 +100,7 @@ export default function App() {
             {/* ── Public store ─────────────────────────────────── */}
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/shop/group/:groupSlug" element={<VariantProductDetail />} />
             <Route path="/shop/:slug" element={<ProductDetail />} />
             <Route path="/wholesale" element={<Wholesale />} />
