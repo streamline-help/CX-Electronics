@@ -150,6 +150,7 @@ The Supabase project is multi-tenant — used by several apps. Tables relevant t
 | ~~`profiles`~~ | **Removed** — does not exist. Admin access is the JWT email check in `is_cw_admin()`, not a role column. | — |
 | `cw_contact_messages` | Contact form inbox | `name`, `email`, `phone`, `inquiry_type`, `message`, `read`, `replied_at`, `created_at` |
 | `wishlist` | Per-user saved products | `user_id`, `product_id` |
+| `product_reviews` | Customer star reviews | `product_id`, `user_id`, `author_name`, `rating` (1-5), `title`, `body`. Public read; own-row write (logged-in customers); admin moderates. One per product per user. |
 
 **RLS-relevant rules** (current, enforced):
 - `products` — public read (`products_public_read`), admin write (`is_cw_admin()`).
@@ -414,6 +415,7 @@ npm run preview      # Preview the built site
 - The local repo doesn't have a `supabase/migrations/` folder — migrations live in the remote project. Document migrations in this CLAUDE.md when applied.
 
 **Recent migrations applied via MCP** (latest first):
+- `2026-06-10 cw_product_reviews` — created `product_reviews` (product_id→products, user_id→auth.uid(), rating 1-5, unique per product+user). RLS: public read, logged-in customers insert/update/delete own, admin (`is_cw_admin()`) all. Feeds the on-page reviews + Product `aggregateRating`.
 - `2026-06-09 cw_add_product_identifiers` — added `brand`, `gtin`, `mpn` text columns to `products`; one-time best-effort brand backfill from names (HiLook/Hikvision/Baofeng/Andowl/BAIHUO/Jiageng/CJ/V380). Feeds the Google Shopping feed + Product JSON-LD.
 - `2026-05-22 cw_add_martin_admin` — `is_cw_admin()` now matches both `info@` and `martin@cw-electronics.co.za` (was a single hardcoded email). Second admin user created in `auth.users`.
 - `2026-05-18 cw_wishlist_table` — created `wishlist` (user_id→auth.users, product_id→products, unique) with own-row RLS.
@@ -427,6 +429,7 @@ npm run preview      # Preview the built site
 
 Keep this short — only "what changed AND why future you needs to know". For full history use `git log`.
 
+- **2026-06-10** — SEO sprint (phase 2). Four on-site growth features: (1) indexable `/category/:slug` landing pages with unique copy + FAQ schema (`categoryContent.ts`, `CategoryPage.tsx`); internal category links repointed from `/shop?category=` to `/category/:slug`. (2) Buying-guide blog at `/blog` + `/blog/:slug` (content in `src/lib/blog.ts`, BlogPosting schema). (3) Customer `product_reviews` (migration `cw_product_reviews`) with star UI (`useReviews`, `StarRating`, `ProductReviews`) wired into Product `aggregateRating`. (4) Speed: `vite.config.ts` `manualChunks` splits react/motion/supabase vendors (main chunk 772KB→416KB), 6 non-landing pages lazy-loaded. Sitemap generator emits category + blog URLs; **keep `BLOG_POSTS` in `scripts/generate-seo.mjs` in sync with `src/lib/blog.ts`.**
 - **2026-06-09** — SEO/organic-traffic sprint (phase 1). Added `brand`/`gtin`/`mpn` to `products` (+ brand backfill, + admin form fields, + `t()` keys). New build-time generator `scripts/generate-seo.mjs` runs after `vite build` and writes `dist/sitemap.xml` (now includes all 72 products) + `dist/feed.xml` (Google Shopping RSS 2.0). **Build command changed** to `tsc -b && vite build && node scripts/generate-seo.mjs`. Generator is resilient (never fails the build) and works because Netlify serves on-disk files before the SPA rewrite — no serverless route needed. Product JSON-LD now uses the real brand + gtin/mpn. New `src/lib/siteConfig.ts` central business config (not yet swept across legacy files). Submit `feed.xml` to Merchant Center; see `GROWTH-SPRINT-NOTES.md`. Payments (Yoco/Ozow) intentionally deferred.
 - **2026-05-12** — Visual polish (round 2): scroll-progress bar, scroll-aware glass navbar, hero grain texture, premium product card hover (sheen + sliding red fill), horizontal scroll-snap Best Sellers, `MagneticButton` primary CTAs. Admin login dark-branded, pre-auth rejection added. Supabase RLS lockdown on `cw_contact_messages`. Warehouse photo swapped to Unsplash stock with Cloudinary fallback.
 - **2026-05-12** — Sweep round 1: fixed Mon-Sun → Mon-Sat across 7 files, replaced placeholder WhatsApp number across 8 files, schema.org phone/postal corrections, FAQPage + BreadcrumbList schemas added, sitemap upgraded, mobile sticky add-to-cart bar, broken cart-drawer upsell links fixed (`/product/` → `/shop/`), admin unread message badge, bilingual admin properly wired.

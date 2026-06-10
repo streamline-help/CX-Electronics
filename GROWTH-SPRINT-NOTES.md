@@ -65,6 +65,28 @@ This phase makes the catalogue **discoverable on Google** — both in regular Se
 
 ---
 
+---
+
+## Phase 2 — on-site SEO features (2026-06-10)
+
+Four features to drive and convert organic traffic:
+
+### 1. Category landing pages — `/category/:slug`
+Real indexable pages (e.g. `/category/cctv`) with unique copy, H1, FAQ + breadcrumb schema, and the product grid. Copy lives in `src/lib/categoryContent.ts` — edit there. Internal category links now point here (not the old `/shop?category=` filter). Only the 7 categories with products are in the sitemap; empty ones render but are `noindex`.
+
+### 2. Buying-guide blog — `/blog`
+Three SA-targeted guides (home CCTV, solar vs wired cameras, 4G routers for load-shedding), each with `BlogPosting` schema and links to relevant categories. **To add/edit a post:** edit `src/lib/blog.ts` AND add its slug to `BLOG_POSTS` in `scripts/generate-seo.mjs` so it reaches the sitemap.
+
+### 3. Customer reviews + ⭐ rating stars
+Logged-in customers can review products (one each). Reviews show on the product page and feed a real `aggregateRating` into the Product JSON-LD — so review stars can appear in Google results once you have reviews. Tied to real accounts (no anonymous/fake reviews). To moderate a bad review for now, delete its row in Supabase (`product_reviews`); a dedicated admin screen can be added later.
+
+### 4. Speed / Core Web Vitals
+`vite.config.ts` `manualChunks` splits React, framer-motion and Supabase into separately-cached vendor chunks; the main app chunk dropped ~772KB→~416KB and now caches across deploys. Six non-landing pages (blog, order confirmation, receipt, invoices) are lazy-loaded.
+
+> After deploy, run the home page + a product page through PageSpeed Insights (pagespeed.web.dev) to confirm the improvement.
+
+---
+
 ## Not done this phase (by request)
 - **Yoco / Ozow payment integration** — deferred until merchant accounts + API keys exist. The order pipeline (`place_order` RPC, `payment_method`/`payment_status` columns, admin status transitions) is already in place to plug a gateway into later.
 - **Compliance page copy refresh** — `/privacy-policy`, `/refund-policy`, `/shipping-policy`, `/terms` already exist as routed pages; their copy wasn't rewritten this phase.
