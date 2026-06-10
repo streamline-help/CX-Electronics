@@ -11,8 +11,11 @@ import { Footer } from '../../components/store/Footer'
 import { ProductCardLight } from '../../components/store/ProductCardLight'
 import { ProductSpecifications } from '../../components/store/ProductSpecifications'
 import { FrequentlyBoughtTogether } from '../../components/store/FrequentlyBoughtTogether'
+import { ProductReviews } from '../../components/store/ProductReviews'
+import { StarRating } from '../../components/store/StarRating'
 import SEO from '../../components/SEO'
 import { useProduct } from '../../hooks/useProduct'
+import { useReviews } from '../../hooks/useReviews'
 import { useProducts } from '../../hooks/useProducts'
 import { useCart } from '../../context/CartContext'
 import { useLang } from '../../context/LangContext'
@@ -28,6 +31,7 @@ export function ProductDetail() {
   const { addItem } = useCart()
   const { lang } = useLang()
   const { toggle, has } = useWishlist()
+  const reviews = useReviews(product?.id)
   const inWishlist = product ? has(product.id) : false
   const [qty, setQty] = useState(1)
   const [activeImage, setActiveImage] = useState(0)
@@ -210,6 +214,7 @@ export function ProductDetail() {
           availability: isOutOfStock ? 'OutOfStock' : 'InStock',
           condition: 'NewCondition',
           url: `/shop/${product.slug}`,
+          ...(reviews.count > 0 ? { rating: { value: Number(reviews.average.toFixed(1)), count: reviews.count } } : {}),
         }}
       />
       <Navbar />
@@ -306,6 +311,16 @@ export function ProductDetail() {
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 mt-2 mb-4 leading-[1.15] text-balance">
               {name}
             </h1>
+
+            {reviews.count > 0 && (
+              <a href="#reviews" className="inline-flex items-center gap-2 mb-4 -mt-1 group">
+                <StarRating value={reviews.average} size={16} />
+                <span className="text-sm font-semibold text-gray-700">{reviews.average.toFixed(1)}</span>
+                <span className="text-sm text-gray-400 group-hover:text-[#E63939] transition-colors underline-offset-2 group-hover:underline">
+                  ({reviews.count} review{reviews.count === 1 ? '' : 's'})
+                </span>
+              </a>
+            )}
 
             {/* Stock */}
             <div className="flex items-center gap-3 mb-5 flex-wrap">
@@ -655,6 +670,9 @@ export function ProductDetail() {
             </div>
           </div>
         )}
+
+        {/* ── Customer Reviews ────────────────────────────── */}
+        <ProductReviews api={reviews} productName={product.name} />
 
         {/* ── Related Products ────────────────────────────── */}
         {relatedProducts.length > 0 && (
